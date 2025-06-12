@@ -33,6 +33,12 @@ var (
 		},
 	}
 	pkgs = []pkg{
+
+		{
+			url:     "https://github.com/sharkdp/bat/releases/download/v{{ version }}/bat_{{ version }}_{{ deb_architecture }}.deb",
+			name:    "bat",
+			version: "0.25.0", // repo: sharkdp/bat
+		},
 		{
 			url:     "https://github.com/ajeetdsouza/zoxide/releases/download/v{{ version }}/zoxide_{{ version }}-1_{{ deb_architecture }}.deb",
 			name:    "zoxide",
