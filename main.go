@@ -84,11 +84,6 @@ var (
 			version: "2.10.2", // repo: goreleaser/goreleaser
 		},
 		{
-			url:     "https://github.com/ms-jpq/sad/releases/download/v{{ version }}/{{ ansible_architecture }}-unknown-linux-gnu.deb",
-			name:    "sad",
-			version: "0.4.32", // repo: ms-jpq/sad
-		},
-		{
 			url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb",
 			name:    "delta",
 			version: "0.18.2", // repo: dandavison/delta
