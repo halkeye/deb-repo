@@ -17,7 +17,22 @@ type pkg struct {
 	version string
 }
 
+type arch struct {
+	deb     string
+	ansible string
+}
+
 var (
+	archs = []arch{
+		{
+			deb:     "amd64",
+			ansible: "x86_64",
+		},
+		{
+			deb:     "arm64",
+			ansible: "aarch64",
+		},
+	}
 	pkgs = []pkg{
 		{
 			url:     "https://github.com/ajeetdsouza/zoxide/releases/download/v{{ version }}/zoxide_{{ version }}-1_{{ deb_architecture }}.deb",
@@ -97,17 +112,17 @@ var (
 	}
 )
 
-func downloadAndCalculateMD5(url string) (string, error) {
+func downloadAndCalculateMD5(dir string, url string) (string, error) {
 	h := md5.New()
 
 	// Create tmp directory if it doesn't exist
-	if err := os.MkdirAll("tmp", 0755); err != nil {
-		return "", fmt.Errorf("failed to create tmp directory: %v", err)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create %s directory: %v", dir, err)
 	}
 
 	// Get filename from URL
 	filename := filepath.Base(url)
-	filepath := filepath.Join("tmp", filename)
+	filepath := filepath.Join(dir, filename)
 
 	if _, err := os.Stat(filepath); err != nil {
 		// Download and save file
@@ -121,7 +136,7 @@ func downloadAndCalculateMD5(url string) (string, error) {
 			return "", fmt.Errorf("failed to download URL %s: status code %d", url, resp.StatusCode)
 		}
 
-		// Save file to tmp directory
+		// Save file to directory
 		file, err := os.Create(filepath)
 		if err != nil {
 			return "", fmt.Errorf("failed to create file: %v", err)
@@ -150,46 +165,46 @@ func downloadAndCalculateMD5(url string) (string, error) {
 }
 
 func main() {
-	var releaseContent string
+	// var releaseContent string
 
-	debArchitecture := "amd64"
-	ansibleArchitecture := "x86_64"
-	for _, pkg := range pkgs {
-		url := strings.ReplaceAll(pkg.url, "{{ version }}", pkg.version)
-		url = strings.ReplaceAll(url, "{{ deb_architecture }}", debArchitecture)
-		url = strings.ReplaceAll(url, "{{ ansible_architecture }}", ansibleArchitecture)
+	for _, arch := range archs {
+		for _, pkg := range pkgs {
+			url := strings.ReplaceAll(pkg.url, "{{ version }}", pkg.version)
+			url = strings.ReplaceAll(url, "{{ deb_architecture }}", arch.deb)
+			url = strings.ReplaceAll(url, "{{ ansible_architecture }}", arch.ansible)
 
-		log.Println("Downloading " + pkg.name)
-		md5Sum, err := downloadAndCalculateMD5(url)
-		if err != nil {
-			log.Fatal(err)
+			log.Println("Downloading " + pkg.name)
+			md5Sum, err := downloadAndCalculateMD5(filepath.Join("tmp", arch.deb), url)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println("MD5: " + md5Sum)
+
+			// 			releaseContent += fmt.Sprintf(`Package: %s
+			// Version: %s
+			// Architecture: %s
+			// URL: %s
+			//
+			// Archive: halkeye
+			// Component: main
+			// Origin: halkeye
+			// Label: halkeye
+			// Codename: halkeye
+			// Acquire-By-Hash: yes
+			// Date: $DATE
+			// Description: local dpkg repo
+			// MD5Sum:
+			// %s
+			// `,
+			// 			pkg.name, pkg.version, debArchitecture, url, md5Sum)
 		}
-		log.Println("MD5: " + md5Sum)
-
-		releaseContent += fmt.Sprintf(`Package: %s
-Version: %s
-Architecture: %s
-URL: %s
-
-Archive: halkeye
-Component: main
-Origin: halkeye 
-Label: halkeye 
-Codename: halkeye
-Acquire-By-Hash: yes 
-Date: $DATE 
-Description: local dpkg repo 
-MD5Sum:
-%s
-`,
-			pkg.name, pkg.version, debArchitecture, url, md5Sum)
 	}
 
 	// Write to release file
-	releaseFile := filepath.Join("tmp", "Packages")
-	if err := os.WriteFile(releaseFile, []byte(releaseContent), 0644); err != nil {
-		log.Fatal(err)
-	}
+	// releaseFile := filepath.Join("tmp", "Packages")
+	// if err := os.WriteFile(releaseFile, []byte(releaseContent), 0644); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// Run command when done
 	// pkg-scanpackages . | xz -9 > Packages.xz

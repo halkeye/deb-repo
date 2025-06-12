@@ -1,7 +1,7 @@
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -9,8 +9,8 @@ permissions:
   id-token: write
 
 env:
-  REPO_NAME: caddy
-  CODENAME: jammy
+  REPO_NAME: halkeye
+  CODENAME: all
   COMPONENTS: main
   ARCHITECTURES: amd64 arm64
 
@@ -23,13 +23,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+
       - name: Create packages
         run: |
-          ...
-          do something funny to create your packages using e.g. fpm, nfpm, ....
-          ...
+          go run main.go
+
       - uses: morph027/apt-repo-action@v2
         id: create-apt-repo
         with:
@@ -38,11 +42,13 @@ jobs:
           codename: ${{ env.CODENAME }}
           components: ${{ env.COMPONENTS }}
           architectures: ${{ env.ARCHITECTURES }}
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages
           path: ${{ steps.create-apt-repo.outputs.dir }}
+
   deploy:
     environment:
       name: github-pages
@@ -53,6 +59,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
       - name: Adding summary
         run: |
           echo ':rocket:' >> $GITHUB_STEP_SUMMARY
