@@ -30,7 +30,7 @@ jobs:
           path: |
             tmp/amd64
             tmp/arm64
-          key: packages
+          key: packages-${{ hashFiles('main.go') }}
 
       - name: Create packages
         run: go run main.go
