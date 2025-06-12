@@ -8,18 +8,9 @@ permissions:
   pages: write
   id-token: write
 
-env:
-  REPO_NAME: halkeye
-  CODENAME: all
-  COMPONENTS: main
-  ARCHITECTURES: amd64 arm64
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact_id: ${{ steps.upload-artifact.outputs.artifact-id }}
-      keyring: ${{ steps.create-apt-repo.outputs.keyring }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,23 +22,25 @@ jobs:
         uses: actions/setup-go@v5
 
       - name: Create packages
-        run: |
-          go run main.go
+        run: go run main.go
 
-      - uses: morph027/apt-repo-action@v2
-        id: create-apt-repo
-        with:
-          repo-name: ${{ env.REPO_NAME }}
-          signing-key: ${{ secrets.SIGNING_KEY }}
-          codename: ${{ env.CODENAME }}
-          components: ${{ env.COMPONENTS }}
-          architectures: ${{ env.ARCHITECTURES }}
+      - name: Install
+        run: sudo apt install -y reprepro
+
+      - name: Build repo amd64
+        run: reprepro -b repo includedeb plucky tmp/amd64/*.deb
+
+      - name: Build repo amd64
+        run: reprepro -b repo includedeb plucky tmp/arm64/*.deb
+
+      - name: "Delete extra files"
+        run: rm -rf repo/conf repo/db
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           name: github-pages
-          path: ${{ steps.create-apt-repo.outputs.dir }}
+          path: repo
 
   deploy:
     environment:
@@ -60,11 +53,11 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Adding summary
-        run: |
-          echo ':rocket:' >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo 'curl -sfLo /etc/apt.trusted.gpg.d/${{ needs.build.outputs.keyring }}.asc ${{ steps.deploy-pages.outputs.page_url }}gpg.key' >> $GITHUB_STEP_SUMMARY
-          echo 'echo "deb ${{ steps.deploy-pages.outputs.page_url }} ${{ env.CODENAME }} ${{ env.COMPONENTS }}" >/etc/apt/sources.list.d/${{ env.REPO_NAME }}.list' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+      # - name: Adding summary
+      #   run: |
+      #     echo ':rocket:' >> $GITHUB_STEP_SUMMARY
+      #     echo '' >> $GITHUB_STEP_SUMMARY
+      #     echo '```bash' >> $GITHUB_STEP_SUMMARY
+      #     echo 'curl -sfLo /etc/apt.trusted.gpg.d/${{ needs.build.outputs.keyring }}.asc ${{ steps.deploy-pages.outputs.page_url }}gpg.key' >> $GITHUB_STEP_SUMMARY
+      #     echo 'echo "deb ${{ steps.deploy-pages.outputs.page_url }} ${{ env.CODENAME }} ${{ env.COMPONENTS }}" >/etc/apt/sources.list.d/${{ env.REPO_NAME }}.list' >> $GITHUB_STEP_SUMMARY
+      #     echo '```' >> $GITHUB_STEP_SUMMARY

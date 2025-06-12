@@ -112,7 +112,7 @@ var (
 	}
 )
 
-func downloadAndCalculateMD5(dir string, url string) (string, error) {
+func downloadAndCalculateMD5(dir string, filename string, url string) (string, error) {
 	h := md5.New()
 
 	// Create tmp directory if it doesn't exist
@@ -120,8 +120,6 @@ func downloadAndCalculateMD5(dir string, url string) (string, error) {
 		return "", fmt.Errorf("failed to create %s directory: %v", dir, err)
 	}
 
-	// Get filename from URL
-	filename := filepath.Base(url)
 	filepath := filepath.Join(dir, filename)
 
 	if _, err := os.Stat(filepath); err != nil {
@@ -174,7 +172,7 @@ func main() {
 			url = strings.ReplaceAll(url, "{{ ansible_architecture }}", arch.ansible)
 
 			log.Println("Downloading " + pkg.name)
-			md5Sum, err := downloadAndCalculateMD5(filepath.Join("tmp", arch.deb), url)
+			md5Sum, err := downloadAndCalculateMD5(filepath.Join("tmp", arch.deb), fmt.Sprintf("%s-%s.deb", pkg.name, pkg.version), url)
 			if err != nil {
 				log.Fatal(err)
 			}
