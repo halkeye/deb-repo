@@ -109,6 +109,11 @@ var (
 			name:    "task",
 			version: "3.44.0", // repo: go-task/task
 		},
+		{
+			url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb",
+			name:    "k9s",
+			version: "0.50.6", // repo: derailed/k9s
+		},
 	}
 )
 
