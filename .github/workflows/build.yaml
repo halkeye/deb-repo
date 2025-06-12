@@ -23,17 +23,36 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
+      - name: Restore cached packages
+        id: cache-deb-packages-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            tmp/amd64
+            tmp/arm64
+          key: packages
+
       - name: Create packages
         run: go run main.go
 
+      - name: Save cached packages
+        id: cache-deb-packages-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            tmp/amd64
+            tmp/arm64
+          key: ${{ steps.cache-deb-packages-restore.outputs.cache-primary-key }}
+
       - name: Install
-        run: sudo apt install -y reprepro
+        run: |
+          sudo apt update
+          sudo apt install -y reprepro
 
-      - name: Build repo amd64
-        run: reprepro -b repo includedeb plucky tmp/amd64/*.deb
-
-      - name: Build repo amd64
-        run: reprepro -b repo includedeb plucky tmp/arm64/*.deb
+      - name: Build repo
+        run: |
+          reprepro -b repo includedeb plucky tmp/*/*.deb
+          reprepro -b repo includedeb nobel tmp/*/*.deb
 
       - name: "Delete extra files"
         run: rm -rf repo/conf repo/db
