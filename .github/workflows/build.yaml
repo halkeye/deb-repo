@@ -51,8 +51,9 @@ jobs:
 
       - name: Build repo
         run: |
-          reprepro -b repo includedeb plucky tmp/*/*.deb
-          reprepro -b repo includedeb nobel tmp/*/*.deb
+          for i in $(grep Codename repo/conf/distributions | awk '{print $2}'); do
+            reprepro -b repo includedeb $i tmp/*/*.deb
+          done
 
       - name: "Delete extra files"
         run: rm -rf repo/conf repo/db
