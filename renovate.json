@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>halkeye/halkeye//.github/renovate/base.json5"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "main.go$"
+      ],
+      "matchStrings": [
+        "version: \"(?<currentValue>.+?)\" \/\/ repo: (?<depName>.*)"
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ]
+}
