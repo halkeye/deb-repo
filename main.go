@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/md5"
 	"fmt"
 	"io"
 	"log"
@@ -112,54 +111,41 @@ var (
 	}
 )
 
-func downloadAndCalculateMD5(dir string, filename string, url string) (string, error) {
-	h := md5.New()
-
+func downloadURL(dir string, filename string, url string) error {
 	// Create tmp directory if it doesn't exist
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create %s directory: %v", dir, err)
+		return fmt.Errorf("failed to create %s directory: %v", dir, err)
 	}
 
 	filepath := filepath.Join(dir, filename)
 
-	if _, err := os.Stat(filepath); err != nil {
-		// Download and save file
-		resp, err := http.Get(url)
-		if err != nil {
-			return "", fmt.Errorf("failed to download URL: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("failed to download URL %s: status code %d", url, resp.StatusCode)
-		}
-
-		// Save file to directory
-		file, err := os.Create(filepath)
-		if err != nil {
-			return "", fmt.Errorf("failed to create file: %v", err)
-		}
-		defer file.Close()
-
-		// Calculate MD5 while copying to file
-		multiWriter := io.MultiWriter(file, h)
-		if _, err := io.Copy(multiWriter, resp.Body); err != nil {
-			return "", fmt.Errorf("failed to read response body: %v", err)
-		}
-	} else {
-		// File already exists, calculate MD5
-		file, err := os.Open(filepath)
-		if err != nil {
-			return "", fmt.Errorf("failed to open file: %v", err)
-		}
-		defer file.Close()
-
-		if _, err := io.Copy(h, file); err != nil {
-			return "", fmt.Errorf("failed to read file: %v", err)
-		}
+	if _, err := os.Stat(filepath); err == nil {
+		return nil
 	}
 
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	// Download and save file
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to download URL: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download URL %s: status code %d", url, resp.StatusCode)
+	}
+
+	// Save file to directory
+	file, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %v", err)
+	}
+	defer file.Close()
+
+	if _, err := io.Copy(file, resp.Body); err != nil {
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	return nil
 }
 
 func main() {
@@ -171,43 +157,12 @@ func main() {
 			url = strings.ReplaceAll(url, "{{ deb_architecture }}", arch.deb)
 			url = strings.ReplaceAll(url, "{{ ansible_architecture }}", arch.ansible)
 
-			log.Println("Downloading " + pkg.name)
-			md5Sum, err := downloadAndCalculateMD5(filepath.Join("tmp", arch.deb), fmt.Sprintf("%s-%s.deb", pkg.name, pkg.version), url)
+			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.name, arch.deb, pkg.version)
+			log.Println("Downloading " + filename)
+			err := downloadURL(filepath.Join("tmp", arch.deb), filename, url)
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Println("MD5: " + md5Sum)
-
-			// 			releaseContent += fmt.Sprintf(`Package: %s
-			// Version: %s
-			// Architecture: %s
-			// URL: %s
-			//
-			// Archive: halkeye
-			// Component: main
-			// Origin: halkeye
-			// Label: halkeye
-			// Codename: halkeye
-			// Acquire-By-Hash: yes
-			// Date: $DATE
-			// Description: local dpkg repo
-			// MD5Sum:
-			// %s
-			// `,
-			// 			pkg.name, pkg.version, debArchitecture, url, md5Sum)
 		}
 	}
-
-	// Write to release file
-	// releaseFile := filepath.Join("tmp", "Packages")
-	// if err := os.WriteFile(releaseFile, []byte(releaseContent), 0644); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// Run command when done
-	// pkg-scanpackages . | xz -9 > Packages.xz
-	// cmd := exec.Command("apt-ftparchive", "generate", "-c", "/etc/apt/apt.conf.d/50deb-repo")
-	// if err := cmd.Run(); err != nil {
-	// 	log.Fatal(err)
-	// }
 }
