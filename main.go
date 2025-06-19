@@ -22,7 +22,7 @@ type pkg struct {
 	Version string `yaml:"version"`
 }
 
-type app struct {
+type appType struct {
 	Name          string            `yaml:"name"`
 	Url           string            `yaml:"url"`
 	Version       string            `yaml:"version"`
@@ -133,9 +133,9 @@ func main() {
 	}
 }
 
-func loadYaml() ([]pkg, []app, error) {
+func loadYaml() ([]pkg, []appType, error) {
 	pkgs := []pkg{}
-	apps := []app{}
+	apps := []appType{}
 
 	yamlFile, err := os.Open("packages.yaml")
 	if err != nil {
@@ -177,11 +177,11 @@ func downloadDebs(pkgs []pkg) error {
 	return nil
 }
 
-func downloadApps(apps []app) error {
+func downloadApps(apps []appType) error {
 	for _, arch := range archs {
 		for _, app := range apps {
 			var err error
-			workDir := filepath.Join("tmp", "app", arch.deb)
+			workDir := filepath.Join("tmp", "app", app.Name, arch.deb)
 
 			if strings.HasSuffix(app.Url, ".tgz") || strings.HasSuffix(app.Url, ".tar.gz") {
 				filename := fmt.Sprintf("%s-%s-%s.%s", app.Name, arch.deb, app.Version, "tgz")
@@ -208,7 +208,7 @@ func downloadApps(apps []app) error {
 					return fmt.Errorf("extracting %s - %s - %s: %w", app.Name, app.Url, filename, err)
 				}
 
-				err = processApp(app, workDir, arch)
+				err = processApp(app, workDir)
 				if err != nil {
 					return fmt.Errorf("processing app %s - %s - %s: %w", app.Name, app.Url, filename, err)
 				}
@@ -224,16 +224,11 @@ func downloadApps(apps []app) error {
 	return nil
 }
 
-func processApp(app app, workDir string, arch archType) error {
+func processApp(app appType, workDir string) error {
 	for ruleIdx, rule := range app.MoveRules {
 		regex, err := regexp.Compile(rule.SrcRegex)
 		if err != nil {
 			return fmt.Errorf("processing app %s's %d src_regex: %w", app.Name, ruleIdx, err)
-		}
-
-		matches, err := filepath.Glob(filepath.Join(workDir, "work", "**", "*"))
-		if err != nil {
-			return fmt.Errorf("processing app %s's %d glob: %w", app.Name, ruleIdx, err)
 		}
 
 		debWorkDir := filepath.Join(workDir, "deb")
@@ -241,24 +236,35 @@ func processApp(app app, workDir string, arch archType) error {
 			return fmt.Errorf("creating debWorkDir %s's %d mkdir: %w", app.Name, ruleIdx, err)
 		}
 
-		for _, file := range matches {
-			filenameWithoutWork := file[len(workDir)+len("work/")+1:]
+		filepath.Walk(filepath.Join(workDir, "work"), func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			filenameWithoutWork := path[len(workDir)+len("work/")+1:]
+			// fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex, regex.MatchString(filenameWithoutWork))
 			if !regex.MatchString(filenameWithoutWork) {
-				continue
+				return nil
 			}
 			newFile := filepath.Join(debWorkDir, rule.Dst)
 			if err := os.MkdirAll(filepath.Dir(newFile), 0o755); err != nil {
 				return fmt.Errorf("processing app %s's %d mkdir: %w", app.Name, ruleIdx, err)
 			}
-			err := os.Rename(file, newFile)
+			err = os.Rename(path, newFile)
 			if err != nil {
-				return fmt.Errorf("processing app %s's %d moving file %s to %s: %w", app.Name, ruleIdx, file, newFile, err)
+				return fmt.Errorf("processing app %s's %d moving file %s to %s: %w", app.Name, ruleIdx, path, newFile, err)
 			}
 
 			err = os.Chmod(newFile, os.FileMode(rule.Mode))
 			if err != nil {
 				return fmt.Errorf("processing app %s's %d setting permissions on file %s to %d: %w", app.Name, ruleIdx, newFile, rule.Mode, err)
 			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("processing app %s's %d: %w", app.Name, ruleIdx, err)
 		}
 	}
 	return nil
