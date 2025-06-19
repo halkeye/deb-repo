@@ -168,7 +168,7 @@
 
 - name: air
   version: 1.62.0 # repo: air-verse/air
-  url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_windows_{{ deb_architecture }}.tar.gz
+  url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
       dst: /usr/local/bin/air
