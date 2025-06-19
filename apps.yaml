@@ -38,7 +38,7 @@
 
 - name: kubectx 
   version: 0.9.5 # repo: ahmetb/kubectx
-  url: https://github.com/ahmetb/kubectx/releases/download/v{{ version }}/kubectx_v{{ version }}_linux_{{ ansible_architecture }}.tar.gz
+  url: https://github.com/ahmetb/kubectx/releases/download/v{{ version }}/kubectx_v{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
   move_rules:
     - src_regex: kubectx.*
       dst: /usr/local/bin/kubectx
@@ -72,7 +72,7 @@
 
 
 - name: act
-  url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ ansible_architecture }}.tar.gz
+  url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ kubectx_architecture }}.tar.gz
   version: 0.2.78 # repo: nektos/act
   move_rules:
     - src_regex: act.*
@@ -107,7 +107,7 @@
 
 - name: bump
   version: 0.2.3 # repo: guilhem/bump
-  url: https://github.com/guilhem/bump/releases/download/v{{ version }}/bump_Linux_{{ ansible_architecture }}.tar.gz
+  url: https://github.com/guilhem/bump/releases/download/v{{ version }}/bump_Linux_{{ kubectx_architecture }}.tar.gz
   move_rules:
     - src_regex: ^bump$
       dst: /usr/local/bin/bump
@@ -147,7 +147,7 @@
 
 - name: gemini-cli
   version: 0.4.0 # repo: reugn/gemini-cli
-  url: https://github.com/reugn/gemini-cli/releases/download/v{{ version }}/gemini_{{ version }}_linux_{{ ansible_architecture }}.tar.gz
+  url: https://github.com/reugn/gemini-cli/releases/download/v{{ version }}/gemini_{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
   move_rules:
     - src_regex: gemini
       dst: /usr/local/bin/gemini
@@ -155,7 +155,9 @@
 
 - name: git-absorb
   version: 0.8.0 # repo: tummychow/git-absorb
-  url: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-{{ git_absorb_architecture }}-unknown-linux-musl.tar.gz
+  url_overrides:
+    arm64: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-arm-unknown-linux-gnueabihf.tar.gz
+    amd64: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-x86_64-unknown-linux-musl.tar.gz 
   move_rules:
     - src_regex: git-absorb.*/git-absorb
       dst: /usr/libexec/git-core
