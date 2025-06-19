@@ -23,36 +23,38 @@ type pkg struct {
 }
 
 type app struct {
-	Name      string `yaml:"name"`
-	Url       string `yaml:"url"`
-	Version   string `yaml:"version"`
-	MoveRules []struct {
+	Name          string            `yaml:"name"`
+	Url           string            `yaml:"url"`
+	Version       string            `yaml:"version"`
+	UrlOverrides  map[string]string `yaml:"url_overrides"`
+	ArchOverrides map[string]string `yaml:"arch_verrides"`
+	MoveRules     []struct {
 		SrcRegex string `yaml:"src_regex"`
 		Dst      string `yaml:"dst"`
 		Mode     int    `yaml:"mode"`
 	} `yaml:"move_rules"`
 }
 
-type arch struct {
-	deb       string
-	ansible   string
-	vale      string
-	gitAbsorb string
+type archType struct {
+	deb     string
+	ansible string
+	vale    string
+	kubectx string
 }
 
 var (
-	archs = []arch{
+	archs = []archType{
 		{
-			vale:      "64-bit",
-			deb:       "amd64",
-			ansible:   "x86_64",
-			gitAbsorb: "x86_64",
+			vale:    "64-bit",
+			kubectx: "x86_64",
+			deb:     "amd64",
+			ansible: "x86_64",
 		},
 		{
-			vale:      "arm64",
-			deb:       "arm64",
-			ansible:   "aarch64",
-			gitAbsorb: "arm",
+			vale:    "arm64",
+			deb:     "arm64",
+			kubectx: "arm64",
+			ansible: "aarch64",
 		},
 	}
 )
@@ -61,13 +63,13 @@ var (
 	templateRe = regexp.MustCompile(`{{\s*(?P<var>\w+)\s*}}`)
 )
 
-func downloadURL(dir string, filename string, url string, version string, a arch) error {
+func downloadURL(dir string, filename string, url string, version string, a archType) error {
 	values := map[string]string{
-		"version":                 version,
-		"deb_architecture":        a.deb,
-		"ansible_architecture":    a.ansible,
-		"vale_architecture":       a.vale,
-		"git_absorb_architecture": a.gitAbsorb,
+		"version":              version,
+		"deb_architecture":     a.deb,
+		"ansible_architecture": a.ansible,
+		"vale_architecture":    a.vale,
+		"kubectx_architecture": a.kubectx,
 	}
 
 	url = templateRe.ReplaceAllStringFunc(url, func(s string) string {
@@ -178,26 +180,42 @@ func downloadDebs(pkgs []pkg) error {
 func downloadApps(apps []app) error {
 	for _, arch := range archs {
 		for _, app := range apps {
+			var err error
 			workDir := filepath.Join("tmp", "app", arch.deb)
 
 			if strings.HasSuffix(app.Url, ".tgz") || strings.HasSuffix(app.Url, ".tar.gz") {
 				filename := fmt.Sprintf("%s-%s-%s.%s", app.Name, arch.deb, app.Version, "tgz")
 				log.Println("Downloading App: " + filename)
 
-				err := downloadURL(workDir, filename, app.Url, app.Version, arch)
+				if val, ok := app.ArchOverrides[arch.deb]; ok {
+					arch = archType{
+						deb:     val,
+						ansible: val,
+					}
+				}
+
+				if val, ok := app.UrlOverrides[arch.deb]; ok {
+					err = downloadURL(workDir, filename, val, app.Version, arch)
+				} else {
+					err = downloadURL(workDir, filename, app.Url, app.Version, arch)
+				}
 				if err != nil {
 					return fmt.Errorf("downloading app %s: %w", app.Name, err)
 				}
 
 				err = untar(filepath.Join(workDir, filename), filepath.Join(workDir, "work"))
 				if err != nil {
-					return fmt.Errorf("extracting %s: %w", app.Name, err)
+					return fmt.Errorf("extracting %s - %s - %s: %w", app.Name, app.Url, filename, err)
 				}
 
 				err = processApp(app, workDir, arch)
 				if err != nil {
-					return fmt.Errorf("processing app %s: %w", app.Name, err)
+					return fmt.Errorf("processing app %s - %s - %s: %w", app.Name, app.Url, filename, err)
 				}
+			} else if strings.HasSuffix(app.Url, ".txz") || strings.HasSuffix(app.Url, ".tar.xz") {
+				// do nothing for now
+			} else if filepath.Ext(app.Url) == "" {
+				// do nothing for now
 			} else {
 				return fmt.Errorf("not sure what to do with ext %s", app.Url)
 			}
@@ -206,7 +224,7 @@ func downloadApps(apps []app) error {
 	return nil
 }
 
-func processApp(app app, workDir string, arch arch) error {
+func processApp(app app, workDir string, arch archType) error {
 	for ruleIdx, rule := range app.MoveRules {
 		regex, err := regexp.Compile(rule.SrcRegex)
 		if err != nil {
@@ -225,12 +243,6 @@ func processApp(app app, workDir string, arch arch) error {
 
 		for _, file := range matches {
 			filenameWithoutWork := file[len(workDir)+len("work/")+1:]
-			fmt.Printf("file: %s -- regex: %s -- value: %t\n",
-				filenameWithoutWork,
-				rule.SrcRegex,
-				regex.MatchString(filenameWithoutWork),
-			)
-
 			if !regex.MatchString(filenameWithoutWork) {
 				continue
 			}
