@@ -7,10 +7,11 @@
     {
       "customType": "regex",
       "fileMatch": [
-        "main.go$"
+        "apps.yaml$",
+        "packages.yaml$"
       ],
       "matchStrings": [
-        "version: \"(?<currentValue>.+?)\", \/\/ repo: (?<depName>.*)"
+        "version: \"(?<currentValue>.+?)\" # repo: (?<depName>.*)"
       ],
       "datasourceTemplate": "github-releases"
     }

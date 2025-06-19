@@ -1,123 +1,80 @@
 package main
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"strings"
+	"text/template"
+
+	"gopkg.in/yaml.v2"
 )
 
 type pkg struct {
-	url     string
-	name    string
-	version string
+	url     string `yaml:"url"`
+	name    string `yaml:"name"`
+	version string `yaml:"version"`
+}
+
+type app struct {
+	name      string `yaml:"name"`
+	url       string `yaml:"url"`
+	version   string `yaml:"version"`
+	moveRules []struct {
+		srcRegex string `yaml:"src_regex"`
+		dst      string `yaml:"dst"`
+		mode     int8   `yaml:"mode"`
+	} `yaml:"move_rules"`
 }
 
 type arch struct {
-	deb     string
-	ansible string
+	deb       string
+	ansible   string
+	vale      string
+	gitAbsorb string
 }
 
 var (
 	archs = []arch{
 		{
-			deb:     "amd64",
-			ansible: "x86_64",
+			vale:      "64-bit",
+			deb:       "amd64",
+			ansible:   "x86_64",
+			gitAbsorb: "x86_64",
 		},
 		{
-			deb:     "arm64",
-			ansible: "aarch64",
-		},
-	}
-	pkgs = []pkg{
-
-		{
-			url:     "https://github.com/sharkdp/bat/releases/download/v{{ version }}/bat_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "bat",
-			version: "0.25.0", // repo: sharkdp/bat
-		},
-		{
-			url:     "https://github.com/ajeetdsouza/zoxide/releases/download/v{{ version }}/zoxide_{{ version }}-1_{{ deb_architecture }}.deb",
-			name:    "zoxide",
-			version: "0.9.8", // repo: ajeetdsouza/zoxide
-		},
-		{
-			url:     "https://github.com/lsd-rs/lsd/releases/download/v{{ version }}/lsd_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "lsd",
-			version: "1.1.5", // repo: lsd-rs/lsd
-		},
-		{
-			url:     "https://github.com/cli/cli/releases/download/v{{ version }}/gh_{{ version }}_linux_{{ deb_architecture }}.deb",
-			name:    "gh",
-			version: "2.74.1", // repo: cli/cli
-		},
-		{
-			url:     "https://github.com/sharkdp/fd/releases/download/v{{ version }}/fd_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "fd",
-			version: "10.2.0", // repo: sharkdp/fd
-		},
-		{
-			url:     "https://github.com/aymanbagabas/shcopy/releases/download/v{{ version }}/shcopy_{{ version }}_linux_{{ deb_architecture }}.deb",
-			name:    "shcopy",
-			version: "0.1.5", // repo: aymanbagabas/shcopy
-		},
-		{
-			url:     "https://github.com/humanlogio/humanlog/releases/download/v{{ version }}/humanlog_{{ version }}_linux_{{ deb_architecture }}.deb",
-			name:    "humanlog",
-			version: "0.7.8", // repo: humanlogio/humanlog"
-		},
-		{
-			url:     "https://github.com/getsops/sops/releases/download/v{{ version }}/sops_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "sops",
-			version: "3.10.2", // repo: getsops/sops
-		},
-		{
-			url:     "https://github.com/sharkdp/vivid/releases/download/v{{ version }}/vivid_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "vivid",
-			version: "0.10.1", // repo: sharkdp/vivid
-		},
-		{
-			url:     "https://github.com/wagoodman/dive/releases/download/v{{ version }}/dive_{{ version }}_linux_{{ deb_architecture }}.deb",
-			name:    "dive",
-			version: "0.13.1", // repo: wagoodman/dive
-		},
-		{
-			url:     "https://github.com/goreleaser/goreleaser/releases/download/v{{ version }}/goreleaser_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "goreleaser",
-			version: "2.10.2", // repo: goreleaser/goreleaser
-		},
-		{
-			url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb",
-			name:    "delta",
-			version: "0.18.2", // repo: dandavison/delta
-		},
-		{
-			url:     "https://gitlab.com/gitlab-org/cli/-/releases/v{{ version }}/downloads/glab_{{ version }}_linux_{{ deb_architecture }}.deb",
-			name:    "glab",
-			version: "1.59.2", // gitlab_repo: gitlab-org/cli
-		},
-		{
-			url:     "https://dl.min.io/client/mc/release/linux-{{ deb_architecture }}/archive/mcli_{{ version }}.0.0_{{ deb_architecture }}.deb",
-			name:    "mc",
-			version: "20250416181326", // repo: minio/mc,
-		},
-		{
-			url:     "https://github.com/go-task/task/releases/download/v{{ version }}/task_linux_{{ deb_architecture }}.deb",
-			name:    "task",
-			version: "3.44.0", // repo: go-task/task
-		},
-		{
-			url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb",
-			name:    "k9s",
-			version: "0.50.6", // repo: derailed/k9s
+			vale:      "arm64",
+			deb:       "arm64",
+			ansible:   "aarch64",
+			gitAbsorb: "arm",
 		},
 	}
 )
 
-func downloadURL(dir string, filename string, url string) error {
+func downloadURL(dir string, filename string, url string, version string, a arch) error {
+	tmpl, err := template.New("url").Parse(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, map[string]string{
+		"version":                 version,
+		"deb_architecture":        a.deb,
+		"ansible_architecture":    a.ansible,
+		"vale_architecture":       a.vale,
+		"git_absorb_architecture": a.gitAbsorb,
+	}); err != nil {
+		log.Fatal(err)
+	}
+	url = buf.String()
+
 	// Create tmp directory if it doesn't exist
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create %s directory: %v", dir, err)
@@ -155,20 +112,155 @@ func downloadURL(dir string, filename string, url string) error {
 }
 
 func main() {
-	// var releaseContent string
+	downloadDebs()
+	downloadApps()
+}
+
+func downloadDebs() {
+	pkgs := []pkg{}
+	yamlFile, err := os.Open("package.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer yamlFile.Close()
+
+	yamlDecoder := yaml.NewDecoder(yamlFile)
+	if err := yamlDecoder.Decode(&pkgs); err != nil {
+		log.Fatal(err)
+	}
 
 	for _, arch := range archs {
 		for _, pkg := range pkgs {
-			url := strings.ReplaceAll(pkg.url, "{{ version }}", pkg.version)
-			url = strings.ReplaceAll(url, "{{ deb_architecture }}", arch.deb)
-			url = strings.ReplaceAll(url, "{{ ansible_architecture }}", arch.ansible)
-
 			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.name, arch.deb, pkg.version)
 			log.Println("Downloading " + filename)
-			err := downloadURL(filepath.Join("tmp", arch.deb), filename, url)
+			err = downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.url, pkg.version, arch)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 	}
+}
+
+func downloadApps() {
+	apps := []app{}
+	yamlFile, err := os.Open("app.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer yamlFile.Close()
+
+	yamlDecoder := yaml.NewDecoder(yamlFile)
+	if err := yamlDecoder.Decode(&apps); err != nil {
+		log.Fatal(err)
+	}
+
+	for _, arch := range archs {
+		for _, app := range apps {
+			filename := fmt.Sprintf("%s-%s-%s.deb", app.name, arch.deb, app.version)
+			log.Println("Downloading " + filename)
+			err = downloadURL(filepath.Join("tmp", arch.deb), filename, app.url, app.version, arch)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
+
+func untar(tgz, dst string) error {
+	f, err := os.Open(tgz)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gzr, err := gzip.NewReader(f)
+	if err != nil {
+		return err
+	}
+	defer gzr.Close()
+
+	tr := tar.NewReader(gzr)
+	for {
+		h, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		target := filepath.Join(dst, h.Name)
+		switch h.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(target, 0o755); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+				return err
+			}
+			out, err := os.Create(target)
+			if err != nil {
+				return err
+			}
+			if _, err = io.Copy(out, tr); err != nil {
+				out.Close()
+				return err
+			}
+			out.Close()
+		default:
+			log.Printf("skip %s (type %c)", h.Name, h.Typeflag)
+		}
+	}
+	return nil
+}
+
+func writeControl(dir string, name, version, arch string) error {
+	ctrl := fmt.Sprintf(`Package: %s
+Version: %s
+Architecture: %s
+Maintainer: you <you@example.com>
+Description: %s packaged from tgz
+`, name, version, arch, name)
+	return os.WriteFile(filepath.Join(dir, "DEBIAN", "control"), []byte(ctrl), 0o644)
+}
+
+func buildDeb(workDir, outDeb string) error {
+	cmd := exec.Command("dpkg-deb", "--build", workDir, outDeb)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	return cmd.Run()
+}
+
+func main2() {
+	if len(os.Args) != 5 {
+		fmt.Fprintf(os.Stderr, "usage: %s <file.tgz> <name> <version> <arch>\n", os.Args[0])
+		os.Exit(1)
+	}
+	tgz, name, version, arch := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
+
+	work := "work"
+	dataDir := filepath.Join(work, "data")
+	if err := os.RemoveAll(work); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(work, "DEBIAN"), 0o755); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := untar(tgz, dataDir); err != nil {
+		log.Fatal(err)
+	}
+
+	// TODO: move/rename files inside dataDir as needed here
+
+	if err := writeControl(work, name, version, arch); err != nil {
+		log.Fatal(err)
+	}
+
+	outDeb := fmt.Sprintf("%s_%s_%s.deb", name, version, arch)
+	if err := buildDeb(work, outDeb); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Created", outDeb)
 }

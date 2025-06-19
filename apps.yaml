@@ -1,0 +1,189 @@
+---
+- name: age
+  url: https://github.com/FiloSottile/age/releases/download/v{{ version }}/age-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
+  version: 1.2.1 # repo: FiloSottile/age
+  move_rules:
+    - src_regex: age/age
+      dst: /usr/local/bin/age
+      mode: 0755
+    - src_regex: age/age-keygen
+      dst: /usr/local/bin/age-keygen
+      mode: 0755
+
+- name: fx
+  url: https://github.com/antonmedv/fx/releases/download/{{ version }}/fx_linux_{{ deb_architecture }}
+  version: 36.0.3 # repo: antonmedv/fx
+  move_rules:
+    - src_regex: fx_.*
+      dst: /usr/local/bin/fx
+      mode: 0755
+
+
+- name: doctl
+  url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
+  version: 1.130.0 # repo: digitalocean/doctl
+  move_rules:
+    - src_regex: doctl.*
+      dst: /usr/local/bin/doctl
+      mode: 0755
+
+
+- name: helmfile
+  version: 1.1.2 # repo: helmfile/helmfile
+  url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: helmfile.*
+      dst: /usr/local/bin/helmfile
+      mode: 0755
+
+- name: kubectx 
+  version: 0.9.5 # repo: ahmetb/kubectx
+  url: https://github.com/ahmetb/kubectx/releases/download/v{{ version }}/kubectx_v{{ version }}_linux_{{ ansible_architecture }}.tar.gz
+  move_rules:
+    - src_regex: kubectx.*
+      dst: /usr/local/bin/kubectx
+      mode: 0755
+
+
+- name: shellcheck
+  url: https://github.com/koalaman/shellcheck/releases/download/v{{ version }}/shellcheck-v{{ version }}.linux.{{ ansible_architecture }}.tar.xz
+  version: 0.10.0 # repo: koalaman/shellcheck
+  move_rules:
+    - src_regex: shellcheck.*/shellcheck
+      dst: /usr/local/bin/shellcheck
+      mode: 0755
+
+
+- name: hadolint
+  url: https://github.com/hadolint/hadolint/releases/download/v{{ version }}/hadolint-Linux-{{ ansible_architecture }}
+  version: 2.12.0 # repo: hadolint/hadolint
+  move_rules:
+    - src_regex: ^hadolint-Linux-\w+$
+      dst: /usr/local/bin/hadolint
+      mode: 0755
+
+- name: typos
+  version: 1.33.1 # repo: crate-ci/typos
+  url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
+  move_rules:
+    - src_regex: typos.*
+      dst: /usr/local/bin/typos
+      mode: 0755
+
+
+- name: act
+  url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ ansible_architecture }}.tar.gz
+  version: 0.2.78 # repo: nektos/act
+  move_rules:
+    - src_regex: act.*
+      dst: /usr/local/bin/act
+      mode: 0755
+
+
+- name: regclient
+  url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regbot-linux-{{ deb_architecture }}
+  version: 0.8.3 # repo: regclient/regclient
+  move_rules:
+    - src_regex: .*
+      dst: /usr/local/bin/regctl
+      mode: 0755
+
+
+- name: rover
+  version: 0.33.0 # repo: apollographql/rover
+  url: https://github.com/apollographql/rover/releases/download/v{{ version }}/rover-v{{ version }}-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
+  move_rules:
+    - src_regex: dist/rover
+      dst: /usr/local/bin/rover
+      mode: 0755
+
+- name: actionlint
+  version: 1.7.7 # repo: rhysd/actionlint
+  url: https://github.com/rhysd/actionlint/releases/download/v{{ version }}/actionlint_{{ version }}_linux_{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: ^actionlint$
+      dst: /usr/local/bin/actionlint
+      mode: 0755
+
+- name: bump
+  version: 0.2.3 # repo: guilhem/bump
+  url: https://github.com/guilhem/bump/releases/download/v{{ version }}/bump_Linux_{{ ansible_architecture }}.tar.gz
+  move_rules:
+    - src_regex: ^bump$
+      dst: /usr/local/bin/bump
+      mode: 0755
+
+- name: stern
+  version: 1.32.0 # repo: stern/stern
+  url: https://github.com/stern/stern/releases/download/v{{ version }}/stern_{{ version }}_linux_{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: ^stern$
+      dst: /usr/local/bin/stern
+      mode: 0755
+
+- name: gron
+  version: 0.7.1 # repo: tomnomnom/gron
+  url: https://github.com/tomnomnom/gron/releases/download/v{{ version }}/gron-linux-{{ deb_architecture }}-{{ version }}.tgz
+  move_rules:
+    - src_regex: ^gron$
+      dst: /usr/local/bin/gron
+      mode: 0755
+
+- name: lychee
+  url: https://github.com/lycheeverse/lychee/releases/download/lychee-v{{ version }}/lychee-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
+  version: 0.19.1 # repo: lycheeverse/lychee
+  move_rules:
+    - src_regex: lychee
+      dst: /usr/local/bin/lychee
+      mode: 0755
+
+- name: vale
+  version: 3.12.0 # repo: errata-ai/vale
+  url: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_{{ vale_architecture }}.tar.gz
+  move_rules:
+    - src_regex: vale
+      dst: /usr/local/bin/vale
+      mode: 0755
+
+- name: gemini-cli
+  version: 0.4.0 # repo: reugn/gemini-cli
+  url: https://github.com/reugn/gemini-cli/releases/download/v{{ version }}/gemini_{{ version }}_linux_{{ ansible_architecture }}.tar.gz
+  move_rules:
+    - src_regex: gemini
+      dst: /usr/local/bin/gemini
+      mode: 0755
+
+- name: git-absorb
+  version: 0.8.0 # repo: tummychow/git-absorb
+  url: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-{{ git_absorb_architecture }}-unknown-linux-musl.tar.gz
+  move_rules:
+    - src_regex: git-absorb.*/git-absorb
+      dst: /usr/libexec/git-core
+      mode: 0755
+    - src_regex: git-absorb.*/docs/git-absorb.1
+      dst: /usr/share/man/man1
+      mode: 0755
+
+- name: air
+  version: 1.62.0 # repo: air-verse/air
+  url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_windows_{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: air
+      dst: /usr/local/bin/air
+      mode: 0755
+
+- name: tailspin
+  version: 5.4.5 # repo: bensadeh/tailspin
+  url: https://github.com/bensadeh/tailspin/releases/download/{{ version }}/tailspin-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
+  move_rules:
+    - src_regex: tspin
+      dst: /usr/local/bin/tspin
+      mode: 0755
+
+- name: kustomize
+  version: 5.6.0 # repo: kubernetes-sigs/kustomize
+  url: https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv{{ version }}/kustomize_v{{ version }}_linux_{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: kustomize
+      dst: /usr/local/bin/kustomize
+      mode: 0755
