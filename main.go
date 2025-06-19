@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/tar"
-	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -11,25 +10,26 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"text/template"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
 type pkg struct {
-	url     string `yaml:"url"`
-	name    string `yaml:"name"`
-	version string `yaml:"version"`
+	Url     string `yaml:"url"`
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
 }
 
 type app struct {
-	name      string `yaml:"name"`
-	url       string `yaml:"url"`
-	version   string `yaml:"version"`
-	moveRules []struct {
-		srcRegex string `yaml:"src_regex"`
-		dst      string `yaml:"dst"`
-		mode     int8   `yaml:"mode"`
+	Name      string `yaml:"name"`
+	Url       string `yaml:"url"`
+	Version   string `yaml:"version"`
+	MoveRules []struct {
+		SrcRegex string `yaml:"src_regex"`
+		Dst      string `yaml:"dst"`
+		Mode     int    `yaml:"mode"`
 	} `yaml:"move_rules"`
 }
 
@@ -57,23 +57,26 @@ var (
 	}
 )
 
-func downloadURL(dir string, filename string, url string, version string, a arch) error {
-	tmpl, err := template.New("url").Parse(url)
-	if err != nil {
-		log.Fatal(err)
-	}
+var (
+	templateRe = regexp.MustCompile(`{{\s*(?P<var>\w+)\s*}}`)
+)
 
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, map[string]string{
+func downloadURL(dir string, filename string, url string, version string, a arch) error {
+	values := map[string]string{
 		"version":                 version,
 		"deb_architecture":        a.deb,
 		"ansible_architecture":    a.ansible,
 		"vale_architecture":       a.vale,
 		"git_absorb_architecture": a.gitAbsorb,
-	}); err != nil {
-		log.Fatal(err)
 	}
-	url = buf.String()
+
+	url = templateRe.ReplaceAllStringFunc(url, func(s string) string {
+		varName := templateRe.FindStringSubmatch(s)[1]
+		if val, ok := values[varName]; ok {
+			return val
+		}
+		return s
+	})
 
 	// Create tmp directory if it doesn't exist
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -112,58 +115,141 @@ func downloadURL(dir string, filename string, url string, version string, a arch
 }
 
 func main() {
-	downloadDebs()
-	downloadApps()
-}
-
-func downloadDebs() {
-	pkgs := []pkg{}
-	yamlFile, err := os.Open("package.yml")
+	var err error
+	pkgs, apps, err := loadYaml()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	err = downloadApps(apps)
+	if err != nil {
+		log.Fatal(fmt.Errorf("downloadApps: %w", err))
+	}
+	err = downloadDebs(pkgs)
+	if err != nil {
+		log.Fatal(fmt.Errorf("downloadDebs: %w", err))
+	}
+}
+
+func loadYaml() ([]pkg, []app, error) {
+	pkgs := []pkg{}
+	apps := []app{}
+
+	yamlFile, err := os.Open("packages.yaml")
+	if err != nil {
+		return pkgs, apps, fmt.Errorf("reading packages.yaml: %w", err)
 	}
 	defer yamlFile.Close()
 
 	yamlDecoder := yaml.NewDecoder(yamlFile)
 	if err := yamlDecoder.Decode(&pkgs); err != nil {
-		log.Fatal(err)
+		return pkgs, apps, fmt.Errorf("decoding pkgs: %w", err)
 	}
 
-	for _, arch := range archs {
-		for _, pkg := range pkgs {
-			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.name, arch.deb, pkg.version)
-			log.Println("Downloading " + filename)
-			err = downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.url, pkg.version, arch)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
-}
-
-func downloadApps() {
-	apps := []app{}
-	yamlFile, err := os.Open("app.yml")
+	yamlFile, err = os.Open("apps.yaml")
 	if err != nil {
-		log.Fatal(err)
+		return pkgs, apps, fmt.Errorf("reading apps.yaml: %w", err)
 	}
 	defer yamlFile.Close()
 
-	yamlDecoder := yaml.NewDecoder(yamlFile)
+	yamlDecoder = yaml.NewDecoder(yamlFile)
 	if err := yamlDecoder.Decode(&apps); err != nil {
-		log.Fatal(err)
+		return pkgs, apps, fmt.Errorf("decoding apps: %w", err)
 	}
 
+	return pkgs, apps, nil
+
+}
+
+func downloadDebs(pkgs []pkg) error {
 	for _, arch := range archs {
-		for _, app := range apps {
-			filename := fmt.Sprintf("%s-%s-%s.deb", app.name, arch.deb, app.version)
+		for _, pkg := range pkgs {
+			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.Name, arch.deb, pkg.Version)
 			log.Println("Downloading " + filename)
-			err = downloadURL(filepath.Join("tmp", arch.deb), filename, app.url, app.version, arch)
+			err := downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.Url, pkg.Version, arch)
 			if err != nil {
-				log.Fatal(err)
+				return fmt.Errorf("downloading deb %s: %w", filename, err)
 			}
 		}
 	}
+	return nil
+}
+
+func downloadApps(apps []app) error {
+	for _, arch := range archs {
+		for _, app := range apps {
+			workDir := filepath.Join("tmp", "app", arch.deb)
+
+			if strings.HasSuffix(app.Url, ".tgz") || strings.HasSuffix(app.Url, ".tar.gz") {
+				filename := fmt.Sprintf("%s-%s-%s.%s", app.Name, arch.deb, app.Version, "tgz")
+				log.Println("Downloading App: " + filename)
+
+				err := downloadURL(workDir, filename, app.Url, app.Version, arch)
+				if err != nil {
+					return fmt.Errorf("downloading app %s: %w", app.Name, err)
+				}
+
+				err = untar(filepath.Join(workDir, filename), filepath.Join(workDir, "work"))
+				if err != nil {
+					return fmt.Errorf("extracting %s: %w", app.Name, err)
+				}
+
+				err = processApp(app, workDir, arch)
+				if err != nil {
+					return fmt.Errorf("processing app %s: %w", app.Name, err)
+				}
+			} else {
+				return fmt.Errorf("not sure what to do with ext %s", app.Url)
+			}
+		}
+	}
+	return nil
+}
+
+func processApp(app app, workDir string, arch arch) error {
+	for ruleIdx, rule := range app.MoveRules {
+		regex, err := regexp.Compile(rule.SrcRegex)
+		if err != nil {
+			return fmt.Errorf("processing app %s's %d src_regex: %w", app.Name, ruleIdx, err)
+		}
+
+		matches, err := filepath.Glob(filepath.Join(workDir, "work", "**", "*"))
+		if err != nil {
+			return fmt.Errorf("processing app %s's %d glob: %w", app.Name, ruleIdx, err)
+		}
+
+		debWorkDir := filepath.Join(workDir, "deb")
+		if err := os.MkdirAll(debWorkDir, 0o755); err != nil {
+			return fmt.Errorf("creating debWorkDir %s's %d mkdir: %w", app.Name, ruleIdx, err)
+		}
+
+		for _, file := range matches {
+			filenameWithoutWork := file[len(workDir)+len("work/")+1:]
+			fmt.Printf("file: %s -- regex: %s -- value: %t\n",
+				filenameWithoutWork,
+				rule.SrcRegex,
+				regex.MatchString(filenameWithoutWork),
+			)
+
+			if !regex.MatchString(filenameWithoutWork) {
+				continue
+			}
+			newFile := filepath.Join(debWorkDir, rule.Dst)
+			if err := os.MkdirAll(filepath.Dir(newFile), 0o755); err != nil {
+				return fmt.Errorf("processing app %s's %d mkdir: %w", app.Name, ruleIdx, err)
+			}
+			err := os.Rename(file, newFile)
+			if err != nil {
+				return fmt.Errorf("processing app %s's %d moving file %s to %s: %w", app.Name, ruleIdx, file, newFile, err)
+			}
+
+			err = os.Chmod(newFile, os.FileMode(rule.Mode))
+			if err != nil {
+				return fmt.Errorf("processing app %s's %d setting permissions on file %s to %d: %w", app.Name, ruleIdx, newFile, rule.Mode, err)
+			}
+		}
+	}
+	return nil
 }
 
 func untar(tgz, dst string) error {
