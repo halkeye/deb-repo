@@ -160,13 +160,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = downloadApps(apps)
-	if err != nil {
-		log.Fatal(fmt.Errorf("downloadApps: %w", err))
-	}
 	err = downloadDebs(pkgs)
 	if err != nil {
 		log.Fatal(fmt.Errorf("downloadDebs: %w", err))
+	}
+
+	err = downloadApps(apps)
+	if err != nil {
+		log.Fatal(fmt.Errorf("downloadApps: %w", err))
 	}
 }
 
