@@ -214,60 +214,68 @@ func downloadDebs(pkgs []pkgType) error {
 	return nil
 }
 
-func downloadApp(app appType, arch archType) error {
-	var err error
-	workDir := filepath.Join("tmp", "app", app.Name, arch.deb)
-	appUrl := app.BuildURL(arch)
-
+func getUnarchiveFunc(appUrl string) readerFunc {
 	for ext, unarchiveFunc := range unarchiveFuncs {
 		if strings.HasSuffix(appUrl, ext) {
-			filename := fmt.Sprintf("%s-%s-%s%s", app.Name, arch.deb, app.Version, ext)
-			log.Println("Downloading App: " + filename)
-
-			err = downloadURL(workDir, filename, appUrl)
-			if err != nil {
-				return fmt.Errorf("downloading %s: %w", appUrl, err)
-			}
-
-			err = unarchive(filepath.Join(workDir, filename), unarchiveFunc, filepath.Join(workDir, "work"))
-			if err != nil {
-				return fmt.Errorf("extracting %s: %w", filename, err)
-			}
-
-			err = processApp(app, workDir)
-			if err != nil {
-				return fmt.Errorf("processing app: %w", err)
-			}
-
-			return nil
+			return unarchiveFunc
 		}
 	}
 
-	if strings.Contains(filepath.Base(appUrl), ".") {
-		return errUnknownExtension
+	return nil
+}
+
+func downloadApp(app appType, arch archType) error {
+	var err error
+
+	appDir := filepath.Join("tmp", "app", app.Name, arch.deb)
+	workDir := filepath.Join(appDir, "work")
+	debWorkDir := filepath.Join(appDir, "deb")
+	debDir := filepath.Join("tmp", arch.deb)
+
+	appUrl := app.BuildURL(arch)
+
+	filename := filepath.Base(appUrl)
+	unarchiveFunc := getUnarchiveFunc(appUrl)
+	if unarchiveFunc == nil {
+		if strings.Contains(filename, ".") {
+			return errUnknownExtension
+		}
 	}
 
-	{
-		filename := filepath.Base(appUrl)
-		log.Println("Downloading App: " + filename)
+	log.Println("Downloading App: " + filepath.Join(appDir, filename))
 
-		err = os.MkdirAll(filepath.Join(workDir, "work"), 0o755)
+	if unarchiveFunc == nil {
+		err = downloadURL(workDir, filename, appUrl)
 		if err != nil {
-			return fmt.Errorf("creating work dir: %w", err)
+			return fmt.Errorf("downloading %s: %w", appUrl, err)
 		}
-
-		err = downloadURL(filepath.Join(workDir, "work"), filename, appUrl)
+	} else {
+		err = downloadURL(appDir, filename, appUrl)
 		if err != nil {
 			return fmt.Errorf("downloading %s: %w", appUrl, err)
 		}
 
-		err = processApp(app, workDir)
+		err = unarchive(filepath.Join(appDir, filename), unarchiveFunc, workDir)
 		if err != nil {
-			return fmt.Errorf("processing app: %w", err)
+			return fmt.Errorf("extracting %s: %w", filepath.Join(appDir, filename), err)
 		}
-
-		return nil
 	}
+
+	err = processApp(app, workDir, debWorkDir)
+	if err != nil {
+		return fmt.Errorf("processing app: %w", err)
+	}
+
+	if err := writeControl(debWorkDir, app.Name, app.Version, arch.deb); err != nil {
+		return fmt.Errorf("writing control file: %w", err)
+	}
+
+	outDeb := fmt.Sprintf("%s_%s_%s.deb", app.Name, app.Version, arch.deb)
+	if err := buildDeb(debWorkDir, filepath.Join(debDir, outDeb)); err != nil {
+		return fmt.Errorf("building deb: %w", err)
+	}
+
+	return nil
 }
 
 func downloadApps(apps []appType) error {
@@ -275,20 +283,24 @@ func downloadApps(apps []appType) error {
 		for _, app := range apps {
 			err := downloadApp(app, arch)
 			if err != nil {
-				if err == errUnknownExtension {
-					log.Printf("processing app %s - %s\n", app.Name, app.BuildURL(arch))
-				} else {
-					return fmt.Errorf("processing app %s: %w", app.Name, err)
-				}
+				return fmt.Errorf("downloading apps %s: %w", app.Name, err)
 			}
 		}
 	}
 	return nil
 }
 
-func processApp(app appType, workDir string) error {
+func processApp(app appType, workDir string, debWorkDir string) error {
 
 	madeChanges := false
+
+	if err := os.MkdirAll(workDir, 0o755); err != nil {
+		return fmt.Errorf("creating workDir %s: %w", workDir, err)
+	}
+
+	if err := os.MkdirAll(debWorkDir, 0o755); err != nil {
+		return fmt.Errorf("creating debWorkDir %s: %w", debWorkDir, err)
+	}
 
 	// TODO flip this, walk slow fs and go through loop of rules
 	for ruleIdx, rule := range app.MoveRules {
@@ -297,12 +309,7 @@ func processApp(app appType, workDir string) error {
 			return fmt.Errorf("processing app %s's %d src_regex: %w", app.Name, ruleIdx, err)
 		}
 
-		debWorkDir := filepath.Join(workDir, "deb")
-		if err := os.MkdirAll(debWorkDir, 0o755); err != nil {
-			return fmt.Errorf("creating debWorkDir %s's %d mkdir: %w", app.Name, ruleIdx, err)
-		}
-
-		err = filepath.Walk(filepath.Join(workDir, "work"), func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -311,8 +318,8 @@ func processApp(app appType, workDir string) error {
 				return nil
 			}
 
-			filenameWithoutWork := path[len(workDir)+len("work/")+1:]
-			// fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex, regex.MatchString(filenameWithoutWork))
+			filenameWithoutWork := path[len(workDir)+1:]
+			fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex, regex.MatchString(filenameWithoutWork))
 			if !regex.MatchString(filenameWithoutWork) {
 				return nil
 			}
@@ -334,6 +341,7 @@ func processApp(app appType, workDir string) error {
 			}
 			return nil
 		})
+
 		if err != nil {
 			return fmt.Errorf("processing app %s's %d: %w", app.Name, ruleIdx, err)
 		}
@@ -398,52 +406,22 @@ func unarchive(file string, reader readerFunc, dst string) error {
 }
 
 func writeControl(dir string, name, version, arch string) error {
+	debianDir := filepath.Join(dir, "DEBIAN")
+	if err := os.MkdirAll(debianDir, 0755); err != nil {
+		return fmt.Errorf("failed to create %s directory: %v", debianDir, err)
+	}
+
 	ctrl := fmt.Sprintf(`Package: %s
 Version: %s
 Architecture: %s
-Maintainer: you <you@example.com>
+Maintainer: Gavin Mogan <debian@gavinmogan.com>
 Description: %s packaged from tgz
 `, name, version, arch, name)
-	return os.WriteFile(filepath.Join(dir, "DEBIAN", "control"), []byte(ctrl), 0o644)
+	return os.WriteFile(filepath.Join(debianDir, "control"), []byte(ctrl), 0o644)
 }
 
-func buildDeb(workDir, outDeb string) error {
-	cmd := exec.Command("dpkg-deb", "--build", workDir, outDeb)
+func buildDeb(dir, outDeb string) error {
+	cmd := exec.Command("fakeroot", "dpkg-deb", "--build", dir, outDeb)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return cmd.Run()
 }
-
-//
-// func main2() {
-// 	if len(os.Args) != 5 {
-// 		fmt.Fprintf(os.Stderr, "usage: %s <file.tgz> <name> <version> <arch>\n", os.Args[0])
-// 		os.Exit(1)
-// 	}
-// 	tgz, name, version, arch := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
-//
-// 	work := "work"
-// 	dataDir := filepath.Join(work, "data")
-// 	if err := os.RemoveAll(work); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err := os.MkdirAll(filepath.Join(work, "DEBIAN"), 0o755); err != nil {
-// 		log.Fatal(err)
-// 	}
-//
-// 	if err := untgz(tgz, dataDir); err != nil {
-// 		log.Fatal(err)
-// 	}
-//
-// 	// TODO: move/rename files inside dataDir as needed here
-//
-// 	if err := writeControl(work, name, version, arch); err != nil {
-// 		log.Fatal(err)
-// 	}
-//
-// 	outDeb := fmt.Sprintf("%s_%s_%s.deb", name, version, arch)
-// 	if err := buildDeb(work, outDeb); err != nil {
-// 		log.Fatal(err)
-// 	}
-//
-// 	fmt.Println("Created", outDeb)
-// }
