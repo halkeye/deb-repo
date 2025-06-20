@@ -416,6 +416,7 @@ func writeControl(dir string, name, version, arch string) error {
 Version: %s
 Architecture: %s
 Maintainer: Gavin Mogan <debian@gavinmogan.com>
+Section: extra
 Description: %s packaged from tgz
 `, name, version, arch, name)
 	return os.WriteFile(filepath.Join(debianDir, "control"), []byte(ctrl), 0o644)
