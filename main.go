@@ -417,6 +417,7 @@ Version: %s
 Architecture: %s
 Maintainer: Gavin Mogan <debian@gavinmogan.com>
 Section: extra
+Priority: optional
 Description: %s packaged from tgz
 `, name, version, arch, name)
 	return os.WriteFile(filepath.Join(debianDir, "control"), []byte(ctrl), 0o644)
