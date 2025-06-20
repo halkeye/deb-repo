@@ -55,10 +55,10 @@
 
 
 - name: hadolint
-  url: https://github.com/hadolint/hadolint/releases/download/v{{ version }}/hadolint-Linux-{{ ansible_architecture }}
+  url: https://github.com/hadolint/hadolint/releases/download/v{{ version }}/hadolint-Linux-{{ kubectx_architecture }}
   version: 2.12.0 # repo: hadolint/hadolint
   move_rules:
-    - src_regex: ^hadolint-Linux-\w+$
+    - src_regex: ^hadolint-Linux-
       dst: /usr/local/bin/hadolint
       mode: 0755
 

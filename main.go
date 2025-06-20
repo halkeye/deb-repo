@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,10 +14,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ulikunitz/xz"
 	"gopkg.in/yaml.v2"
 )
 
-type pkg struct {
+var errUnknownExtension = errors.New("unknown extension")
+
+type pkgType struct {
 	Url     string `yaml:"url"`
 	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
@@ -35,6 +39,47 @@ type appType struct {
 	} `yaml:"move_rules"`
 }
 
+func (pkg pkgType) BuildURL(arch archType) string {
+	return ProcessURL(pkg.Url, pkg.Version, arch)
+}
+
+func (app appType) BuildURL(arch archType) string {
+	if val, ok := app.ArchOverrides[arch.deb]; ok {
+		arch = archType{
+			deb:     val,
+			ansible: val,
+			vale:    val,
+			kubectx: val,
+		}
+	}
+
+	appUrl := app.Url
+	if val, ok := app.UrlOverrides[arch.deb]; ok {
+		appUrl = val
+	}
+
+	return ProcessURL(appUrl, app.Version, arch)
+}
+
+func ProcessURL(url string, version string, arch archType) string {
+
+	values := map[string]string{
+		"version":              version,
+		"deb_architecture":     arch.deb,
+		"ansible_architecture": arch.ansible,
+		"vale_architecture":    arch.vale,
+		"kubectx_architecture": arch.kubectx,
+	}
+
+	return templateRe.ReplaceAllStringFunc(url, func(s string) string {
+		varName := templateRe.FindStringSubmatch(s)[1]
+		if val, ok := values[varName]; ok {
+			return val
+		}
+		return s
+	})
+}
+
 type archType struct {
 	deb     string
 	ansible string
@@ -42,7 +87,15 @@ type archType struct {
 	kubectx string
 }
 
+type readerFunc func(r io.Reader) (io.Reader, error)
+
 var (
+	unarchiveFuncs = map[string]readerFunc{
+		".tar.gz": func(r io.Reader) (io.Reader, error) { return gzip.NewReader(r) },
+		".tgz":    func(r io.Reader) (io.Reader, error) { return gzip.NewReader(r) },
+		".tar.xz": func(r io.Reader) (io.Reader, error) { return xz.NewReader(r) },
+		".txz":    func(r io.Reader) (io.Reader, error) { return xz.NewReader(r) },
+	}
 	archs = []archType{
 		{
 			vale:    "64-bit",
@@ -63,23 +116,7 @@ var (
 	templateRe = regexp.MustCompile(`{{\s*(?P<var>\w+)\s*}}`)
 )
 
-func downloadURL(dir string, filename string, url string, version string, a archType) error {
-	values := map[string]string{
-		"version":              version,
-		"deb_architecture":     a.deb,
-		"ansible_architecture": a.ansible,
-		"vale_architecture":    a.vale,
-		"kubectx_architecture": a.kubectx,
-	}
-
-	url = templateRe.ReplaceAllStringFunc(url, func(s string) string {
-		varName := templateRe.FindStringSubmatch(s)[1]
-		if val, ok := values[varName]; ok {
-			return val
-		}
-		return s
-	})
-
+func downloadURL(dir string, filename string, url string) error {
 	// Create tmp directory if it doesn't exist
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create %s directory: %v", dir, err)
@@ -133,8 +170,8 @@ func main() {
 	}
 }
 
-func loadYaml() ([]pkg, []appType, error) {
-	pkgs := []pkg{}
+func loadYaml() ([]pkgType, []appType, error) {
+	pkgs := []pkgType{}
 	apps := []appType{}
 
 	yamlFile, err := os.Open("packages.yaml")
@@ -163,12 +200,12 @@ func loadYaml() ([]pkg, []appType, error) {
 
 }
 
-func downloadDebs(pkgs []pkg) error {
+func downloadDebs(pkgs []pkgType) error {
 	for _, arch := range archs {
 		for _, pkg := range pkgs {
 			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.Name, arch.deb, pkg.Version)
 			log.Println("Downloading " + filename)
-			err := downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.Url, pkg.Version, arch)
+			err := downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.BuildURL(arch))
 			if err != nil {
 				return fmt.Errorf("downloading deb %s: %w", filename, err)
 			}
@@ -177,47 +214,72 @@ func downloadDebs(pkgs []pkg) error {
 	return nil
 }
 
+func downloadApp(app appType, arch archType) error {
+	var err error
+	workDir := filepath.Join("tmp", "app", app.Name, arch.deb)
+	appUrl := app.BuildURL(arch)
+
+	for ext, unarchiveFunc := range unarchiveFuncs {
+		if strings.HasSuffix(appUrl, ext) {
+			filename := fmt.Sprintf("%s-%s-%s%s", app.Name, arch.deb, app.Version, ext)
+			log.Println("Downloading App: " + filename)
+
+			err = downloadURL(workDir, filename, appUrl)
+			if err != nil {
+				return fmt.Errorf("downloading %s: %w", appUrl, err)
+			}
+
+			err = unarchive(filepath.Join(workDir, filename), unarchiveFunc, filepath.Join(workDir, "work"))
+			if err != nil {
+				return fmt.Errorf("extracting %s: %w", filename, err)
+			}
+
+			err = processApp(app, workDir)
+			if err != nil {
+				return fmt.Errorf("processing app: %w", err)
+			}
+
+			return nil
+		}
+	}
+
+	if strings.Contains(filepath.Base(appUrl), ".") {
+		return errUnknownExtension
+	}
+
+	{
+		filename := filepath.Base(appUrl)
+		log.Println("Downloading App: " + filename)
+
+		err = os.MkdirAll(filepath.Join(workDir, "work"), 0o755)
+		if err != nil {
+			return fmt.Errorf("creating work dir: %w", err)
+		}
+
+		err = downloadURL(filepath.Join(workDir, "work"), filename, appUrl)
+		if err != nil {
+			return fmt.Errorf("downloading %s: %w", appUrl, err)
+		}
+
+		err = processApp(app, workDir)
+		if err != nil {
+			return fmt.Errorf("processing app: %w", err)
+		}
+
+		return nil
+	}
+}
+
 func downloadApps(apps []appType) error {
 	for _, arch := range archs {
 		for _, app := range apps {
-			var err error
-			workDir := filepath.Join("tmp", "app", app.Name, arch.deb)
-
-			if strings.HasSuffix(app.Url, ".tgz") || strings.HasSuffix(app.Url, ".tar.gz") {
-				filename := fmt.Sprintf("%s-%s-%s.%s", app.Name, arch.deb, app.Version, "tgz")
-				log.Println("Downloading App: " + filename)
-
-				if val, ok := app.ArchOverrides[arch.deb]; ok {
-					arch = archType{
-						deb:     val,
-						ansible: val,
-					}
-				}
-
-				if val, ok := app.UrlOverrides[arch.deb]; ok {
-					err = downloadURL(workDir, filename, val, app.Version, arch)
+			err := downloadApp(app, arch)
+			if err != nil {
+				if err == errUnknownExtension {
+					log.Printf("processing app %s - %s\n", app.Name, app.BuildURL(arch))
 				} else {
-					err = downloadURL(workDir, filename, app.Url, app.Version, arch)
+					return fmt.Errorf("processing app %s: %w", app.Name, err)
 				}
-				if err != nil {
-					return fmt.Errorf("downloading app %s: %w", app.Name, err)
-				}
-
-				err = untar(filepath.Join(workDir, filename), filepath.Join(workDir, "work"))
-				if err != nil {
-					return fmt.Errorf("extracting %s - %s - %s: %w", app.Name, app.Url, filename, err)
-				}
-
-				err = processApp(app, workDir)
-				if err != nil {
-					return fmt.Errorf("processing app %s - %s - %s: %w", app.Name, app.Url, filename, err)
-				}
-			} else if strings.HasSuffix(app.Url, ".txz") || strings.HasSuffix(app.Url, ".tar.xz") {
-				// do nothing for now
-			} else if filepath.Ext(app.Url) == "" {
-				// do nothing for now
-			} else {
-				return fmt.Errorf("not sure what to do with ext %s", app.Url)
 			}
 		}
 	}
@@ -225,6 +287,10 @@ func downloadApps(apps []appType) error {
 }
 
 func processApp(app appType, workDir string) error {
+
+	madeChanges := false
+
+	// TODO flip this, walk slow fs and go through loop of rules
 	for ruleIdx, rule := range app.MoveRules {
 		regex, err := regexp.Compile(rule.SrcRegex)
 		if err != nil {
@@ -236,22 +302,27 @@ func processApp(app appType, workDir string) error {
 			return fmt.Errorf("creating debWorkDir %s's %d mkdir: %w", app.Name, ruleIdx, err)
 		}
 
-		filepath.Walk(filepath.Join(workDir, "work"), func(path string, info os.FileInfo, err error) error {
+		err = filepath.Walk(filepath.Join(workDir, "work"), func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
+
 			if info.IsDir() {
 				return nil
 			}
+
 			filenameWithoutWork := path[len(workDir)+len("work/")+1:]
 			// fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex, regex.MatchString(filenameWithoutWork))
 			if !regex.MatchString(filenameWithoutWork) {
 				return nil
 			}
+
 			newFile := filepath.Join(debWorkDir, rule.Dst)
 			if err := os.MkdirAll(filepath.Dir(newFile), 0o755); err != nil {
 				return fmt.Errorf("processing app %s's %d mkdir: %w", app.Name, ruleIdx, err)
 			}
+
+			madeChanges = true
 			err = os.Rename(path, newFile)
 			if err != nil {
 				return fmt.Errorf("processing app %s's %d moving file %s to %s: %w", app.Name, ruleIdx, path, newFile, err)
@@ -267,23 +338,30 @@ func processApp(app appType, workDir string) error {
 			return fmt.Errorf("processing app %s's %d: %w", app.Name, ruleIdx, err)
 		}
 	}
+
+	if !madeChanges {
+		return errors.New("no assets found")
+	}
 	return nil
 }
 
-func untar(tgz, dst string) error {
-	f, err := os.Open(tgz)
+func unarchive(file string, reader readerFunc, dst string) error {
+	f, err := os.Open(file)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	gzr, err := gzip.NewReader(f)
+	archiveReader, err := reader(f)
 	if err != nil {
 		return err
 	}
-	defer gzr.Close()
 
-	tr := tar.NewReader(gzr)
+	if closeReader, ok := archiveReader.(io.ReadCloser); ok {
+		defer closeReader.Close()
+	}
+
+	tr := tar.NewReader(archiveReader)
 	for {
 		h, err := tr.Next()
 		if err == io.EOF {
@@ -335,36 +413,37 @@ func buildDeb(workDir, outDeb string) error {
 	return cmd.Run()
 }
 
-func main2() {
-	if len(os.Args) != 5 {
-		fmt.Fprintf(os.Stderr, "usage: %s <file.tgz> <name> <version> <arch>\n", os.Args[0])
-		os.Exit(1)
-	}
-	tgz, name, version, arch := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
-
-	work := "work"
-	dataDir := filepath.Join(work, "data")
-	if err := os.RemoveAll(work); err != nil {
-		log.Fatal(err)
-	}
-	if err := os.MkdirAll(filepath.Join(work, "DEBIAN"), 0o755); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := untar(tgz, dataDir); err != nil {
-		log.Fatal(err)
-	}
-
-	// TODO: move/rename files inside dataDir as needed here
-
-	if err := writeControl(work, name, version, arch); err != nil {
-		log.Fatal(err)
-	}
-
-	outDeb := fmt.Sprintf("%s_%s_%s.deb", name, version, arch)
-	if err := buildDeb(work, outDeb); err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Created", outDeb)
-}
+//
+// func main2() {
+// 	if len(os.Args) != 5 {
+// 		fmt.Fprintf(os.Stderr, "usage: %s <file.tgz> <name> <version> <arch>\n", os.Args[0])
+// 		os.Exit(1)
+// 	}
+// 	tgz, name, version, arch := os.Args[1], os.Args[2], os.Args[3], os.Args[4]
+//
+// 	work := "work"
+// 	dataDir := filepath.Join(work, "data")
+// 	if err := os.RemoveAll(work); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	if err := os.MkdirAll(filepath.Join(work, "DEBIAN"), 0o755); err != nil {
+// 		log.Fatal(err)
+// 	}
+//
+// 	if err := untgz(tgz, dataDir); err != nil {
+// 		log.Fatal(err)
+// 	}
+//
+// 	// TODO: move/rename files inside dataDir as needed here
+//
+// 	if err := writeControl(work, name, version, arch); err != nil {
+// 		log.Fatal(err)
+// 	}
+//
+// 	outDeb := fmt.Sprintf("%s_%s_%s.deb", name, version, arch)
+// 	if err := buildDeb(work, outDeb); err != nil {
+// 		log.Fatal(err)
+// 	}
+//
+// 	fmt.Println("Created", outDeb)
+// }
