@@ -12,7 +12,7 @@
 
 - name: fx
   url: https://github.com/antonmedv/fx/releases/download/{{ version }}/fx_linux_{{ deb_architecture }}
-  version: 36.0.3 # repo: antonmedv/fx
+  version: 36.0.4 # repo: antonmedv/fx
   move_rules:
     - src_regex: fx_.*
       dst: /usr/local/bin/fx
@@ -21,7 +21,7 @@
 
 - name: doctl
   url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
-  version: 1.130.0 # repo: digitalocean/doctl
+  version: 1.131.0 # repo: digitalocean/doctl
   move_rules:
     - src_regex: doctl.*
       dst: /usr/local/bin/doctl
@@ -90,7 +90,7 @@
 
 
 - name: rover
-  version: 0.33.0 # repo: apollographql/rover
+  version: 0.34.0 # repo: apollographql/rover
   url: https://github.com/apollographql/rover/releases/download/v{{ version }}/rover-v{{ version }}-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
   move_rules:
     - src_regex: dist/rover
