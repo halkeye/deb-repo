@@ -12,7 +12,7 @@
 
 - name: fx
   url: https://github.com/antonmedv/fx/releases/download/{{ version }}/fx_linux_{{ deb_architecture }}
-  version: 36.0.4 # repo: antonmedv/fx
+  version: 37.0.0 # repo: antonmedv/fx
   move_rules:
     - src_regex: fx_.*
       dst: /usr/local/bin/fx
