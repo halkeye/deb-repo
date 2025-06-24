@@ -160,7 +160,7 @@
     amd64: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-x86_64-unknown-linux-musl.tar.gz 
   move_rules:
     - src_regex: git-absorb.*/git-absorb
-      dst: /usr/libexec/git-core
+      dst: /usr/libexec/git-core/git-absorb
       mode: 0755
     - src_regex: git-absorb.*/docs/git-absorb.1
       dst: /usr/share/man/man1
