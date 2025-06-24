@@ -24,7 +24,7 @@
 
 - url:     "https://github.com/humanlogio/humanlog/releases/download/v{{ version }}/humanlog_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "humanlog"
-  version: "0.7.8" # repo: humanlogio/humanlog"
+  version: "0.7.8" # repo: humanlogio/humanlog
 
 - url:     "https://github.com/getsops/sops/releases/download/v{{ version }}/sops_{{ version }}_{{ deb_architecture }}.deb"
   name:    "sops"
