@@ -90,7 +90,7 @@
 
 
 - name: rover
-  version: 0.34.0 # repo: apollographql/rover
+  version: 0.34.1 # repo: apollographql/rover
   url: https://github.com/apollographql/rover/releases/download/v{{ version }}/rover-v{{ version }}-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
   move_rules:
     - src_regex: dist/rover
