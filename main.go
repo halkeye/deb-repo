@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ulikunitz/xz"
 	"gopkg.in/yaml.v2"
@@ -33,9 +34,9 @@ type appType struct {
 	UrlOverrides  map[string]string `yaml:"url_overrides"`
 	ArchOverrides map[string]string `yaml:"arch_verrides"`
 	MoveRules     []struct {
-		SrcRegex string `yaml:"src_regex"`
-		Dst      string `yaml:"dst"`
-		Mode     int    `yaml:"mode"`
+		SrcRegex regexp.Regexp `yaml:"src_regex"`
+		Dst      string        `yaml:"dst"`
+		Mode     int           `yaml:"mode"`
 	} `yaml:"move_rules"`
 }
 
@@ -231,7 +232,6 @@ func downloadApp(app appType, arch archType) error {
 	appDir := filepath.Join("tmp", "app", app.Name, arch.deb)
 	workDir := filepath.Join(appDir, "work")
 	debWorkDir := filepath.Join(appDir, "deb")
-	debDir := filepath.Join("tmp", arch.deb)
 
 	appUrl := app.BuildURL(arch)
 
@@ -267,6 +267,8 @@ func downloadApp(app appType, arch archType) error {
 		return fmt.Errorf("processing app: %w", err)
 	}
 
+	debDir := filepath.Join("tmp", arch.deb)
+
 	if err := writeControl(debWorkDir, app.Name, app.Version, arch.deb); err != nil {
 		return fmt.Errorf("writing control file: %w", err)
 	}
@@ -292,6 +294,7 @@ func downloadApps(apps []appType) error {
 }
 
 func processApp(app appType, workDir string, debWorkDir string) error {
+	defer warnTime("processApp "+app.Name, 10*time.Second)()
 
 	madeChanges := false
 
@@ -303,25 +306,19 @@ func processApp(app appType, workDir string, debWorkDir string) error {
 		return fmt.Errorf("creating debWorkDir %s: %w", debWorkDir, err)
 	}
 
-	// TODO flip this, walk slow fs and go through loop of rules
-	for ruleIdx, rule := range app.MoveRules {
-		regex, err := regexp.Compile(rule.SrcRegex)
+	err := filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("processing app %s's %d src_regex: %w", app.Name, ruleIdx, err)
+			return err
 		}
 
-		err = filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+		if info.IsDir() {
+			return nil
+		}
 
-			if info.IsDir() {
-				return nil
-			}
-
+		for ruleIdx, rule := range app.MoveRules {
 			filenameWithoutWork := path[len(workDir)+1:]
-			fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex, regex.MatchString(filenameWithoutWork))
-			if !regex.MatchString(filenameWithoutWork) {
+			// fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex.String(), rule.SrcRegex.MatchString(filenameWithoutWork))
+			if !rule.SrcRegex.MatchString(filenameWithoutWork) {
 				return nil
 			}
 
@@ -331,7 +328,8 @@ func processApp(app appType, workDir string, debWorkDir string) error {
 			}
 
 			madeChanges = true
-			err = os.Rename(path, newFile)
+			os.Remove(newFile)
+			err = os.Link(path, newFile)
 			if err != nil {
 				return fmt.Errorf("processing app %s's %d moving file %s to %s: %w", app.Name, ruleIdx, path, newFile, err)
 			}
@@ -340,12 +338,12 @@ func processApp(app appType, workDir string, debWorkDir string) error {
 			if err != nil {
 				return fmt.Errorf("processing app %s's %d setting permissions on file %s to %d: %w", app.Name, ruleIdx, newFile, rule.Mode, err)
 			}
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("processing app %s's %d: %w", app.Name, ruleIdx, err)
 		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("processing app %s: %w", app.Name, err)
 	}
 
 	if !madeChanges {
@@ -355,6 +353,7 @@ func processApp(app appType, workDir string, debWorkDir string) error {
 }
 
 func unarchive(file string, reader readerFunc, dst string) error {
+	defer warnTime("unarchive "+file, time.Second)()
 	f, err := os.Open(file)
 	if err != nil {
 		return err
@@ -407,6 +406,7 @@ func unarchive(file string, reader readerFunc, dst string) error {
 }
 
 func writeControl(dir string, name, version, arch string) error {
+	defer warnTime("writeControl "+dir, time.Second)()
 	debianDir := filepath.Join(dir, "DEBIAN")
 	if err := os.MkdirAll(debianDir, 0755); err != nil {
 		return fmt.Errorf("failed to create %s directory: %v", debianDir, err)
@@ -424,7 +424,17 @@ Description: %s packaged from tgz
 }
 
 func buildDeb(dir, outDeb string) error {
+	defer warnTime("buildDeb "+dir, 15*time.Second)()
 	cmd := exec.Command("fakeroot", "dpkg-deb", "--build", dir, outDeb)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return cmd.Run()
+}
+
+func warnTime(process string, warnTime time.Duration) func() {
+	start := time.Now()
+	return func() {
+		if time.Since(start) > warnTime {
+			log.Printf("Time taken by %s is %v\n", process, time.Since(start))
+		}
+	}
 }

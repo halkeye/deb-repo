@@ -3,10 +3,10 @@
   url: https://github.com/FiloSottile/age/releases/download/v{{ version }}/age-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   version: 1.2.1 # repo: FiloSottile/age
   move_rules:
-    - src_regex: age/age
+    - src_regex: age/age$
       dst: /usr/local/bin/age
       mode: 0755
-    - src_regex: age/age-keygen
+    - src_regex: age/age-keygen$
       dst: /usr/local/bin/age-keygen
       mode: 0755
 
