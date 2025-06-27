@@ -189,3 +189,11 @@
     - src_regex: kustomize
       dst: /usr/local/bin/kustomize
       mode: 0755
+
+- name: grpcui
+  version: 5.6.0 # repo: kubernetes-sigs/kustomize
+  url: https://github.com/fullstorydev/grpcui/releases/download/v{{ version }}/grpcui_{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
+  move_rules:
+    - src_regex: grpcui
+      dst: /usr/local/bin/grpcui
+      mode: 0755
