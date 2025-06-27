@@ -191,7 +191,7 @@
       mode: 0755
 
 - name: grpcui
-  version: 5.6.0 # repo: kubernetes-sigs/kustomize
+  version: 1.4.3 # repo: fullstorydev/grpcui
   url: https://github.com/fullstorydev/grpcui/releases/download/v{{ version }}/grpcui_{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
   move_rules:
     - src_regex: grpcui
