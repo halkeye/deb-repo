@@ -12,11 +12,11 @@
 
 - url:     "https://github.com/cli/cli/releases/download/v{{ version }}/gh_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "gh"
-  version: "2.74.2" # repo: cli/cli
+  version: "2.78.0" # repo: cli/cli
 
 - url:     "https://github.com/sharkdp/fd/releases/download/v{{ version }}/fd_{{ version }}_{{ deb_architecture }}.deb"
   name:    "fd"
-  version: "10.2.0" # repo: sharkdp/fd
+  version: "10.3.0" # repo: sharkdp/fd
 
 - url:     "https://github.com/aymanbagabas/shcopy/releases/download/v{{ version }}/shcopy_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "shcopy"
@@ -40,7 +40,7 @@
 
 - url:     "https://github.com/goreleaser/goreleaser/releases/download/v{{ version }}/goreleaser_{{ version }}_{{ deb_architecture }}.deb"
   name:    "goreleaser"
-  version: "2.10.2" # repo: goreleaser/goreleaser
+  version: "2.12.0" # repo: goreleaser/goreleaser
 
 - url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb"
   name:    "delta"
@@ -56,11 +56,11 @@
 
 - url:     "https://github.com/go-task/task/releases/download/v{{ version }}/task_linux_{{ deb_architecture }}.deb"
   name:    "task"
-  version: "3.44.0" # repo: go-task/task
+  version: "3.44.1" # repo: go-task/task
 
 - url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb"
   name:    "k9s"
-  version: "0.50.6" # repo: derailed/k9s
+  version: "0.50.9" # repo: derailed/k9s
 
 - url:     "https://github.com/fullstorydev/grpcurl/releases/download/v{{ version }}/grpcurl_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "grpcurl"
