@@ -81,10 +81,10 @@
 
 
 - name: regclient
-  url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regbot-linux-{{ deb_architecture }}
+  url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regctl-linux-{{ deb_architecture }}
   version: 0.9.0 # repo: regclient/regclient
   move_rules:
-    - src_regex: .*
+    - src_regex: regctl.*
       dst: /usr/local/bin/regctl
       mode: 0755
 
