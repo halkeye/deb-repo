@@ -12,7 +12,7 @@
 
 - name: fx
   url: https://github.com/antonmedv/fx/releases/download/{{ version }}/fx_linux_{{ deb_architecture }}
-  version: "39.0.4" # repo: antonmedv/fx
+  version: "39.1.0" # repo: antonmedv/fx
   move_rules:
     - src_regex: fx_.*
       dst: /usr/local/bin/fx
@@ -114,7 +114,7 @@
       mode: 0755
 
 - name: stern
-  version: "1.32.0" # repo: stern/stern
+  version: "1.33.0" # repo: stern/stern
   url: https://github.com/stern/stern/releases/download/v{{ version }}/stern_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: ^stern$
@@ -167,7 +167,7 @@
       mode: 0755
 
 - name: air
-  version: "1.62.0" # repo: air-verse/air
+  version: "1.63.0" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
