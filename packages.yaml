@@ -12,7 +12,7 @@
 
 - url:     "https://github.com/cli/cli/releases/download/v{{ version }}/gh_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "gh"
-  version: "2.78.0" # repo: cli/cli
+  version: "2.79.0" # repo: cli/cli
 
 - url:     "https://github.com/sharkdp/fd/releases/download/v{{ version }}/fd_{{ version }}_{{ deb_architecture }}.deb"
   name:    "fd"
