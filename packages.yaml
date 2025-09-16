@@ -40,7 +40,7 @@
 
 - url:     "https://github.com/goreleaser/goreleaser/releases/download/v{{ version }}/goreleaser_{{ version }}_{{ deb_architecture }}.deb"
   name:    "goreleaser"
-  version: "2.12.0" # repo: goreleaser/goreleaser
+  version: "2.12.1" # repo: goreleaser/goreleaser
 
 - url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb"
   name:    "delta"
@@ -56,7 +56,7 @@
 
 - url:     "https://github.com/go-task/task/releases/download/v{{ version }}/task_linux_{{ deb_architecture }}.deb"
   name:    "task"
-  version: "3.44.1" # repo: go-task/task
+  version: "3.45.3" # repo: go-task/task
 
 - url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb"
   name:    "k9s"
