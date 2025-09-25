@@ -205,3 +205,22 @@
     - src_regex: git-standup
       dst: /usr/libexec/git-core/git-standup
       mode: 0755
+
+- name:    "fzf"
+  version: "0.65.2" # repo: junegunn/fzf
+  url:     "https://github.com/junegunn/fzf/releases/download/v{{ version }}/fzf-{{ version }}-linux_{{ deb_architecture }}.tar.gz"
+  move_rules:
+    - src_regex: fzf
+      dst: /usr/local/bin/fzf
+      mode: 0755
+  extra_files:
+    - url: https://raw.githubusercontent.com/junegunn/fzf/refs/tags/v{{ version }}/shell/key-bindings.zsh
+      dst: /usr/local/fzf/key-bindings.zsh
+    - url: https://raw.githubusercontent.com/junegunn/fzf/refs/tags/v{{ version }}/shell/completion.zsh
+      dst: /usr/local/fzf/completion.zsh
+    - url: https://raw.githubusercontent.com/junegunn/fzf/refs/tags/v{{ version }}/shell/key-bindings.bash
+      dst: /usr/local/fzf/key-bindings.bash
+    - url: https://raw.githubusercontent.com/junegunn/fzf/refs/tags/v{{ version }}/shell/completion.bash
+      dst: /usr/local/fzf/completion.bash
+    - url: https://raw.githubusercontent.com/junegunn/fzf/refs/tags/v{{ version }}/shell/key-bindings.fish
+      dst: /usr/local/fzf/key-bindings.fish

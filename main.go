@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	flag "github.com/spf13/pflag"
 	"github.com/ulikunitz/xz"
 	"gopkg.in/yaml.v2"
 )
@@ -38,6 +39,11 @@ type appType struct {
 		Dst      string        `yaml:"dst"`
 		Mode     int           `yaml:"mode"`
 	} `yaml:"move_rules"`
+	ExtraFiles []struct {
+		URL  string `yaml:"url"`
+		Dst  string `yaml:"dst"`
+		Mode int    `yaml:"mode"`
+	} `yaml:"extra_files"`
 }
 
 func (pkg pkgType) BuildURL(arch archType) string {
@@ -156,9 +162,33 @@ func downloadURL(dir string, filename string, url string) error {
 
 func main() {
 	var err error
+
+	var singleApp *string = flag.String("single-app", "", "only process single app")
+	flag.Parse()
+
 	pkgs, apps, err := loadYaml()
 	if err != nil {
 		log.Fatal(err)
+	}
+	if singleApp != nil {
+		for _, pkg := range pkgs {
+			if pkg.Name == *singleApp {
+				pkgs = []pkgType{pkg}
+				break
+			}
+		}
+		for _, app := range apps {
+			if app.Name == *singleApp {
+				apps = []appType{app}
+				break
+			}
+		}
+		if len(pkgs) > 1 {
+			pkgs = []pkgType{}
+		}
+		if len(apps) > 1 {
+			apps = []appType{}
+		}
 	}
 
 	err = downloadDebs(pkgs)
@@ -265,6 +295,13 @@ func downloadApp(app appType, arch archType) error {
 	err = processApp(app, workDir, debWorkDir)
 	if err != nil {
 		return fmt.Errorf("processing app: %w", err)
+	}
+
+	for _, extraFile := range app.ExtraFiles {
+		err := downloadURL(filepath.Join(debWorkDir, filepath.Dir(extraFile.Dst)), filepath.Base(extraFile.Dst), ProcessURL(extraFile.URL, app.Version, arch))
+		if err != nil {
+			return fmt.Errorf("unable to extra url %s: %w", extraFile.URL, err)
+		}
 	}
 
 	debDir := filepath.Join("tmp", arch.deb)
