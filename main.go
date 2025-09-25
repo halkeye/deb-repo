@@ -170,7 +170,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if singleApp != nil {
+	if singleApp != nil && *singleApp != "" {
 		for _, pkg := range pkgs {
 			if pkg.Name == *singleApp {
 				pkgs = []pkgType{pkg}
