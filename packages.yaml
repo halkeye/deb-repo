@@ -28,7 +28,7 @@
 
 - url:     "https://github.com/getsops/sops/releases/download/v{{ version }}/sops_{{ version }}_{{ deb_architecture }}.deb"
   name:    "sops"
-  version: "3.10.2" # repo: getsops/sops
+  version: "3.11.0" # repo: getsops/sops
 
 - url:     "https://github.com/sharkdp/vivid/releases/download/v{{ version }}/vivid_{{ version }}_{{ deb_architecture }}.deb"
   name:    "vivid"
