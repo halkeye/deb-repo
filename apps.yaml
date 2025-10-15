@@ -98,7 +98,7 @@
       mode: 0755
 
 - name: actionlint
-  version: "1.7.7" # repo: rhysd/actionlint
+  version: "1.7.8" # repo: rhysd/actionlint
   url: https://github.com/rhysd/actionlint/releases/download/v{{ version }}/actionlint_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: ^actionlint$
@@ -207,7 +207,7 @@
       mode: 0755
 
 - name:    "fzf"
-  version: "0.65.2" # repo: junegunn/fzf
+  version: "0.66.0" # repo: junegunn/fzf
   url:     "https://github.com/junegunn/fzf/releases/download/v{{ version }}/fzf-{{ version }}-linux_{{ deb_architecture }}.tar.gz"
   move_rules:
     - src_regex: fzf
