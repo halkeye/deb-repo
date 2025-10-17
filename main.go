@@ -17,7 +17,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"github.com/ulikunitz/xz"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var errUnknownExtension = errors.New("unknown extension")

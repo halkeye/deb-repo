@@ -6,5 +6,4 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/ulikunitz/xz v0.5.15
 	gopkg.in/yaml.v3 v3.0.1
-	gopkg.in/yaml.v3 v3.0.1
 )
