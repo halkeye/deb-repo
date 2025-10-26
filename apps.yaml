@@ -207,7 +207,7 @@
       mode: 0755
 
 - name:    "fzf"
-  version: "0.66.0" # repo: junegunn/fzf
+  version: "0.66.1" # repo: junegunn/fzf
   url:     "https://github.com/junegunn/fzf/releases/download/v{{ version }}/fzf-{{ version }}-linux_{{ deb_architecture }}.tar.gz"
   move_rules:
     - src_regex: fzf
