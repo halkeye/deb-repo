@@ -114,7 +114,7 @@
       mode: 0755
 
 - name: stern
-  version: "1.33.0" # repo: stern/stern
+  version: "1.33.1" # repo: stern/stern
   url: https://github.com/stern/stern/releases/download/v{{ version }}/stern_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: ^stern$
