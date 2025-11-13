@@ -12,7 +12,7 @@
 
 - name: fx
   url: https://github.com/antonmedv/fx/releases/download/{{ version }}/fx_linux_{{ deb_architecture }}
-  version: "39.1.0" # repo: antonmedv/fx
+  version: "39.2.0" # repo: antonmedv/fx
   move_rules:
     - src_regex: fx_.*
       dst: /usr/local/bin/fx
@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.39.0" # repo: crate-ci/typos
+  version: "1.39.1" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*

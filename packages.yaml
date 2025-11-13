@@ -56,7 +56,7 @@
 
 - url:     "https://github.com/go-task/task/releases/download/v{{ version }}/task_linux_{{ deb_architecture }}.deb"
   name:    "task"
-  version: "3.45.4" # repo: go-task/task
+  version: "3.45.5" # repo: go-task/task
 
 - url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb"
   name:    "k9s"
