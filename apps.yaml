@@ -29,7 +29,7 @@
 
 
 - name: helmfile
-  version: "1.1.9" # repo: helmfile/helmfile
+  version: "1.2.0" # repo: helmfile/helmfile
   url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helmfile.*
@@ -167,7 +167,7 @@
       mode: 0755
 
 - name: air
-  version: "1.63.0" # repo: air-verse/air
+  version: "1.63.1" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
@@ -207,7 +207,7 @@
       mode: 0755
 
 - name:    "fzf"
-  version: "0.66.1" # repo: junegunn/fzf
+  version: "0.67.0" # repo: junegunn/fzf
   url:     "https://github.com/junegunn/fzf/releases/download/v{{ version }}/fzf-{{ version }}-linux_{{ deb_architecture }}.tar.gz"
   move_rules:
     - src_regex: fzf
