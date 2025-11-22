@@ -98,7 +98,7 @@
       mode: 0755
 
 - name: actionlint
-  version: "1.7.8" # repo: rhysd/actionlint
+  version: "1.7.9" # repo: rhysd/actionlint
   url: https://github.com/rhysd/actionlint/releases/download/v{{ version }}/actionlint_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: ^actionlint$
