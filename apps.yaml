@@ -145,14 +145,6 @@
       dst: /usr/local/bin/vale
       mode: 0755
 
-- name: gemini-cli
-  version: "0.4.0" # repo: reugn/gemini-cli
-  url: https://github.com/reugn/gemini-cli/releases/download/v{{ version }}/gemini_{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
-  move_rules:
-    - src_regex: gemini
-      dst: /usr/local/bin/gemini
-      mode: 0755
-
 - name: git-absorb
   version: "0.8.0" # repo: tummychow/git-absorb
   url_overrides:
