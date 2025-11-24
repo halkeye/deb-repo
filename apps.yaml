@@ -29,7 +29,7 @@
 
 
 - name: helmfile
-  version: "1.2.0" # repo: helmfile/helmfile
+  version: "1.2.1" # repo: helmfile/helmfile
   url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helmfile.*
