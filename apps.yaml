@@ -159,7 +159,7 @@
       mode: 0755
 
 - name: air
-  version: "1.63.3" # repo: air-verse/air
+  version: "1.63.4" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
