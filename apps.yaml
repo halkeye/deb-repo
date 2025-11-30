@@ -216,3 +216,11 @@
       dst: /usr/local/fzf/completion.bash
     - url: https://raw.githubusercontent.com/junegunn/fzf/refs/tags/v{{ version }}/shell/key-bindings.fish
       dst: /usr/local/fzf/key-bindings.fish
+
+- name: helm
+  version: "4.0.1" # repo: helm/helm
+  url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: helm
+      dst: /usr/local/bin/helm
+      mode: 0755
