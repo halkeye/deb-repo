@@ -73,7 +73,7 @@
 
 - name: act
   url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ kubectx_architecture }}.tar.gz
-  version: "0.2.82" # repo: nektos/act
+  version: "0.2.83" # repo: nektos/act
   move_rules:
     - src_regex: act.*
       dst: /usr/local/bin/act
@@ -82,7 +82,7 @@
 
 - name: regclient
   url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regctl-linux-{{ deb_architecture }}
-  version: "0.10.0" # repo: regclient/regclient
+  version: "0.11.0" # repo: regclient/regclient
   move_rules:
     - src_regex: regctl.*
       dst: /usr/local/bin/regctl
