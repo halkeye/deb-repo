@@ -82,7 +82,7 @@
 
 - name: regclient
   url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regctl-linux-{{ deb_architecture }}
-  version: "0.11.0" # repo: regclient/regclient
+  version: "0.11.1" # repo: regclient/regclient
   move_rules:
     - src_regex: regctl.*
       dst: /usr/local/bin/regctl
