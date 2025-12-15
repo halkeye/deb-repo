@@ -29,7 +29,7 @@ jobs:
 
       - name: Restore cached packages
         id: cache-deb-packages-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             tmp/amd64
@@ -41,7 +41,7 @@ jobs:
 
       - name: Save cached packages
         id: cache-deb-packages-save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: |
             tmp/amd64
