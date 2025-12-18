@@ -90,7 +90,7 @@
 
 
 - name: rover
-  version: "0.37.0" # repo: apollographql/rover
+  version: "0.37.1" # repo: apollographql/rover
   url: https://github.com/apollographql/rover/releases/download/v{{ version }}/rover-v{{ version }}-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
   move_rules:
     - src_regex: dist/rover
@@ -218,7 +218,7 @@
       dst: /usr/local/fzf/key-bindings.fish
 
 - name: helm
-  version: "4.0.2" # repo: helm/helm
+  version: "4.0.4" # repo: helm/helm
   url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helm
