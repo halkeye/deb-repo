@@ -54,7 +54,7 @@
   name:    "mc"
   version: "20250416181326" # repo: minio/mc
 
-- url:     "https://github.com/go-task/task/releases/download/v{{ version }}/task_linux_{{ deb_architecture }}.deb"
+- url:     "https://github.com/go-task/task/releases/download/v{{ version }}/task_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "task"
   version: "3.46.4" # repo: go-task/task
 
