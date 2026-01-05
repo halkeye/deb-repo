@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.40.1" # repo: crate-ci/typos
+  version: "1.41.0" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
@@ -73,7 +73,7 @@
 
 - name: act
   url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ kubectx_architecture }}.tar.gz
-  version: "0.2.83" # repo: nektos/act
+  version: "0.2.84" # repo: nektos/act
   move_rules:
     - src_regex: act.*
       dst: /usr/local/bin/act
@@ -98,7 +98,7 @@
       mode: 0755
 
 - name: actionlint
-  version: "1.7.9" # repo: rhysd/actionlint
+  version: "1.7.10" # repo: rhysd/actionlint
   url: https://github.com/rhysd/actionlint/releases/download/v{{ version }}/actionlint_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: ^actionlint$
@@ -159,7 +159,7 @@
       mode: 0755
 
 - name: air
-  version: "1.63.4" # repo: air-verse/air
+  version: "1.63.5" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
