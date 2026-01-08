@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.41.0" # repo: crate-ci/typos
+  version: "1.42.0" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
