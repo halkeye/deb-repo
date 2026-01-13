@@ -40,7 +40,7 @@
 
 - url:     "https://github.com/goreleaser/goreleaser/releases/download/v{{ version }}/goreleaser_{{ version }}_{{ deb_architecture }}.deb"
   name:    "goreleaser"
-  version: "2.13.2" # repo: goreleaser/goreleaser
+  version: "2.13.3" # repo: goreleaser/goreleaser
 
 - url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb"
   name:    "delta"
@@ -60,7 +60,7 @@
 
 - url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb"
   name:    "k9s"
-  version: "0.50.16" # repo: derailed/k9s
+  version: "0.50.18" # repo: derailed/k9s
 
 - url:     "https://github.com/fullstorydev/grpcurl/releases/download/v{{ version }}/grpcurl_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "grpcurl"
