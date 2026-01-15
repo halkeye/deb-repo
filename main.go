@@ -55,7 +55,6 @@ func (app appType) BuildURL(arch archType) string {
 		arch = archType{
 			deb:     val,
 			ansible: val,
-			vale:    val,
 			kubectx: val,
 		}
 	}
@@ -74,7 +73,6 @@ func ProcessURL(url string, version string, arch archType) string {
 		"version":              version,
 		"deb_architecture":     arch.deb,
 		"ansible_architecture": arch.ansible,
-		"vale_architecture":    arch.vale,
 		"kubectx_architecture": arch.kubectx,
 	}
 
@@ -90,7 +88,6 @@ func ProcessURL(url string, version string, arch archType) string {
 type archType struct {
 	deb     string
 	ansible string
-	vale    string
 	kubectx string
 }
 
@@ -105,13 +102,11 @@ var (
 	}
 	archs = []archType{
 		{
-			vale:    "64-bit",
 			kubectx: "x86_64",
 			deb:     "amd64",
 			ansible: "x86_64",
 		},
 		{
-			vale:    "arm64",
 			deb:     "arm64",
 			kubectx: "arm64",
 			ansible: "aarch64",

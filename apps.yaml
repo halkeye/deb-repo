@@ -36,7 +36,7 @@
       dst: /usr/local/bin/helmfile
       mode: 0755
 
-- name: kubectx 
+- name: kubectx
   version: "0.9.5" # repo: ahmetb/kubectx
   url: https://github.com/ahmetb/kubectx/releases/download/v{{ version }}/kubectx_v{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
   move_rules:
@@ -139,7 +139,9 @@
 
 - name: vale
   version: "3.13.0" # repo: errata-ai/vale
-  url: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_{{ vale_architecture }}.tar.gz
+  url_overrides:
+    arm64: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_arm64.tar.gz
+    amd64: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_64-bit.tar.gz
   move_rules:
     - src_regex: vale
       dst: /usr/local/bin/vale
@@ -149,7 +151,7 @@
   version: "0.8.0" # repo: tummychow/git-absorb
   url_overrides:
     arm64: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-arm-unknown-linux-gnueabihf.tar.gz
-    amd64: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-x86_64-unknown-linux-musl.tar.gz 
+    amd64: https://github.com/tummychow/git-absorb/releases/download/{{ version }}/git-absorb-{{ version }}-x86_64-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: git-absorb.*/git-absorb
       dst: /usr/libexec/git-core/git-absorb
@@ -223,4 +225,14 @@
   move_rules:
     - src_regex: helm
       dst: /usr/local/bin/helm
+      mode: 0755
+
+- name: copilot
+  version: "0.0.382" # repo: github/copilot-cli
+  url_overrides:
+    arm64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-arm64.tar.gz
+    amd64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-x64.tar.gz
+  move_rules:
+    - src_regex: copilot
+      dst: /usr/local/bin/copilot
       mode: 0755
