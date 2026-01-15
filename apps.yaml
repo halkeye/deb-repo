@@ -158,7 +158,7 @@
       dst: /usr/share/man/man1
       mode: 0755
 
-- name: air
+- name: air-bin
   version: "1.64.0" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
