@@ -220,7 +220,7 @@
       dst: /usr/local/fzf/key-bindings.fish
 
 - name: helm
-  version: "4.0.4" # repo: helm/helm
+  version: "4.0.5" # repo: helm/helm
   url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helm
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: copilot
-  version: "0.0.382" # repo: github/copilot-cli
+  version: "0.0.384" # repo: github/copilot-cli
   url_overrides:
     arm64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-arm64.tar.gz
     amd64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-x64.tar.gz
