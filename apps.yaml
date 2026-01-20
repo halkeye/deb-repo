@@ -161,7 +161,7 @@
       mode: 0755
 
 - name: air-bin
-  version: "1.64.1" # repo: air-verse/air
+  version: "1.64.2" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: copilot
-  version: "0.0.387" # repo: github/copilot-cli
+  version: "0.0.388" # repo: github/copilot-cli
   url_overrides:
     arm64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-arm64.tar.gz
     amd64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-x64.tar.gz
