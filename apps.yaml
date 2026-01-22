@@ -220,7 +220,7 @@
       dst: /usr/local/fzf/key-bindings.fish
 
 - name: helm
-  version: "4.0.5" # repo: helm/helm
+  version: "4.1.0" # repo: helm/helm
   url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helm
