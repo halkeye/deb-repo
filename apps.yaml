@@ -227,12 +227,12 @@
       dst: /usr/local/bin/helm
       mode: 0755
 
-- name: copilot
-  version: "0.0.388" # repo: github/copilot-cli
+- name: opencode
+  version: "1.1.31" # repo: anomalyco/opencode
   url_overrides:
-    arm64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-arm64.tar.gz
-    amd64: https://github.com/github/copilot-cli/releases/download/v{{ version }}/copilot-linux-x64.tar.gz
+    arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
+    amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
   move_rules:
-    - src_regex: copilot
-      dst: /usr/local/bin/copilot
+    - src_regex: opencode
+      dst: /usr/local/bin/opencode
       mode: 0755
