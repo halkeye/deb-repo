@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.43.2" # repo: crate-ci/typos
+  version: "1.43.4" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
@@ -138,7 +138,7 @@
       mode: 0755
 
 - name: vale
-  version: "3.13.0" # repo: errata-ai/vale
+  version: "3.13.1" # repo: errata-ai/vale
   url_overrides:
     arm64: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_arm64.tar.gz
     amd64: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_64-bit.tar.gz
@@ -220,7 +220,7 @@
       dst: /usr/local/fzf/key-bindings.fish
 
 - name: helm
-  version: "4.1.0" # repo: helm/helm
+  version: "4.1.1" # repo: helm/helm
   url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helm
