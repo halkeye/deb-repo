@@ -29,7 +29,7 @@
 
 
 - name: helmfile
-  version: "1.3.1" # repo: helmfile/helmfile
+  version: "1.3.2" # repo: helmfile/helmfile
   url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helmfile.*
@@ -82,7 +82,7 @@
 
 - name: regclient
   url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regctl-linux-{{ deb_architecture }}
-  version: "0.11.1" # repo: regclient/regclient
+  version: "0.11.2" # repo: regclient/regclient
   move_rules:
     - src_regex: regctl.*
       dst: /usr/local/bin/regctl
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.2.10" # repo: anomalyco/opencode
+  version: "1.2.15" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
