@@ -236,3 +236,11 @@
     - src_regex: opencode
       dst: /usr/local/bin/opencode
       mode: 0755
+
+- name: direnv
+  version: "2.37.1" # repo: direnv/direnv
+  url: https://github.com/direnv/direnv/releases/download/v{{ version }}/direnv.linux-{{ deb_architecture }}
+  move_rules:
+    - src_regex: direnv
+      dst: /usr/local/bin/direnv
+      mode: 0755

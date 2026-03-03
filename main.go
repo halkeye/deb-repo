@@ -262,11 +262,11 @@ func downloadApp(app appType, arch archType) error {
 
 	filename := filepath.Base(appUrl)
 	unarchiveFunc := getUnarchiveFunc(appUrl)
-	if unarchiveFunc == nil {
-		if strings.Contains(filename, ".") {
-			return errUnknownExtension
-		}
-	}
+	// if unarchiveFunc == nil {
+	// 	if strings.Contains(filename, ".") {
+	// 		return errUnknownExtension
+	// 	}
+	// }
 
 	log.Println("Downloading App: " + filepath.Join(appDir, filename))
 
