@@ -29,7 +29,7 @@
 
 
 - name: helmfile
-  version: "1.3.2" # repo: helmfile/helmfile
+  version: "1.4.1" # repo: helmfile/helmfile
   url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helmfile.*
@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.43.5" # repo: crate-ci/typos
+  version: "1.44.0" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
@@ -201,7 +201,7 @@
       mode: 0755
 
 - name:    "fzf"
-  version: "0.68.0" # repo: junegunn/fzf
+  version: "0.70.0" # repo: junegunn/fzf
   url:     "https://github.com/junegunn/fzf/releases/download/v{{ version }}/fzf-{{ version }}-linux_{{ deb_architecture }}.tar.gz"
   move_rules:
     - src_regex: fzf
