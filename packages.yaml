@@ -44,7 +44,7 @@
 
 - url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb"
   name:    "delta"
-  version: "0.19.0" # repo: dandavison/delta
+  version: "0.19.1" # repo: dandavison/delta
 
 - url:     "https://gitlab.com/gitlab-org/cli/-/releases/v{{ version }}/downloads/glab_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "glab"

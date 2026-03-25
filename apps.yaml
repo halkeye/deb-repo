@@ -21,7 +21,7 @@
 
 - name: doctl
   url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
-  version: "1.152.0" # repo: digitalocean/doctl
+  version: "1.153.0" # repo: digitalocean/doctl
   move_rules:
     - src_regex: doctl.*
       dst: /usr/local/bin/doctl
@@ -29,7 +29,7 @@
 
 
 - name: helmfile
-  version: "1.4.2" # repo: helmfile/helmfile
+  version: "1.4.3" # repo: helmfile/helmfile
   url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helmfile.*
@@ -37,7 +37,7 @@
       mode: 0755
 
 - name: kubectx
-  version: "0.10.0" # repo: ahmetb/kubectx
+  version: "0.10.2" # repo: ahmetb/kubectx
   url: https://github.com/ahmetb/kubectx/releases/download/v{{ version }}/kubectx_v{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
   move_rules:
     - src_regex: kubectx.*
@@ -73,7 +73,7 @@
 
 - name: act
   url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ kubectx_architecture }}.tar.gz
-  version: "0.2.84" # repo: nektos/act
+  version: "0.2.85" # repo: nektos/act
   move_rules:
     - src_regex: act.*
       dst: /usr/local/bin/act
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.2.27" # repo: anomalyco/opencode
+  version: "1.3.2" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
