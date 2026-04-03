@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.44.0" # repo: crate-ci/typos
+  version: "1.45.0" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
@@ -73,7 +73,7 @@
 
 - name: act
   url: https://github.com/nektos/act/releases/download/v{{ version }}/act_Linux_{{ kubectx_architecture }}.tar.gz
-  version: "0.2.86" # repo: nektos/act
+  version: "0.2.87" # repo: nektos/act
   move_rules:
     - src_regex: act.*
       dst: /usr/local/bin/act
@@ -90,7 +90,7 @@
 
 
 - name: rover
-  version: "0.37.2" # repo: apollographql/rover
+  version: "0.38.0" # repo: apollographql/rover
   url: https://github.com/apollographql/rover/releases/download/v{{ version }}/rover-v{{ version }}-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
   move_rules:
     - src_regex: dist/rover
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.3.11" # repo: anomalyco/opencode
+  version: "1.3.13" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
