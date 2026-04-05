@@ -244,3 +244,19 @@
     - src_regex: direnv
       dst: /usr/local/bin/direnv
       mode: 0755
+
+- name: cone
+  version: "0.0.39" # repo: ConductorOne/cone
+  url: https://github.com/ConductorOne/cone/releases/download/v{{ version }}/cone-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: cone
+      dst: /usr/local/bin/cone
+      mode: 0755
+
+- name: baton
+  version: "0.4.4" # repo: ConductorOne/baton
+  url: https://github.com/ConductorOne/baton/releases/download/v{{ version }}/baton-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
+  move_rules:
+    - src_regex: baton
+      dst: /usr/local/bin/baton
+      mode: 0755
