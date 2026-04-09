@@ -220,7 +220,7 @@
       dst: /usr/local/fzf/key-bindings.fish
 
 - name: helm
-  version: "4.1.3" # repo: helm/helm
+  version: "4.1.4" # repo: helm/helm
   url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helm
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.4.0" # repo: anomalyco/opencode
+  version: "1.4.2" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
