@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.45.0" # repo: crate-ci/typos
+  version: "1.45.1" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
@@ -82,7 +82,7 @@
 
 - name: regclient
   url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regctl-linux-{{ deb_architecture }}
-  version: "0.11.2" # repo: regclient/regclient
+  version: "0.11.3" # repo: regclient/regclient
   move_rules:
     - src_regex: regctl.*
       dst: /usr/local/bin/regctl
@@ -161,7 +161,7 @@
       mode: 0755
 
 - name: air-bin
-  version: "1.65.0" # repo: air-verse/air
+  version: "1.65.1" # repo: air-verse/air
   url: https://github.com/air-verse/air/releases/download/v{{ version }}/air_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: air
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.4.2" # repo: anomalyco/opencode
+  version: "1.4.3" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
