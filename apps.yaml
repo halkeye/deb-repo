@@ -21,7 +21,7 @@
 
 - name: doctl
   url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
-  version: "1.154.0" # repo: digitalocean/doctl
+  version: "1.155.0" # repo: digitalocean/doctl
   move_rules:
     - src_regex: doctl.*
       dst: /usr/local/bin/doctl
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.4.5" # repo: anomalyco/opencode
+  version: "1.14.19" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
@@ -254,7 +254,7 @@
       mode: 0755
 
 - name: baton
-  version: "0.4.4" # repo: ConductorOne/baton
+  version: "0.4.5" # repo: ConductorOne/baton
   url: https://github.com/ConductorOne/baton/releases/download/v{{ version }}/baton-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: baton
