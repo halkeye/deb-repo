@@ -65,3 +65,7 @@
 - url:     "https://github.com/fullstorydev/grpcurl/releases/download/v{{ version }}/grpcurl_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "grpcurl"
   version: "1.9.3" # repo: fullstorydev/grpcurl
+
+- url:     "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-{{ deb_architecture }}.deb"
+  name:    "fastfetch"
+  version: "2.62.1" # repo: fastfetch-cli/fastfetch
