@@ -66,6 +66,8 @@
   name:    "grpcurl"
   version: "1.9.3" # repo: fullstorydev/grpcurl
 
-- url:     "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-{{ ansible_architecture }}.deb"
+- url_overrides:
+    arm64: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-amd64.deb"
+    amd64: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-aarch64.deb"
   name:    "fastfetch"
   version: "2.62.1" # repo: fastfetch-cli/fastfetch

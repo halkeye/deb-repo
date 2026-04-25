@@ -23,9 +23,10 @@ import (
 var errUnknownExtension = errors.New("unknown extension")
 
 type pkgType struct {
-	Url     string `yaml:"url"`
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
+	Url          string            `yaml:"url"`
+	Name         string            `yaml:"name"`
+	Version      string            `yaml:"version"`
+	UrlOverrides map[string]string `yaml:"url_overrides"`
 }
 
 type appType struct {
@@ -47,7 +48,12 @@ type appType struct {
 }
 
 func (pkg pkgType) BuildURL(arch archType) string {
-	return ProcessURL(pkg.Url, pkg.Version, arch)
+	pkgUrl := pkg.Url
+	if val, ok := pkg.UrlOverrides[arch.deb]; ok {
+		pkgUrl = val
+	}
+
+	return ProcessURL(pkgUrl, pkg.Version, arch)
 }
 
 func (app appType) BuildURL(arch archType) string {
