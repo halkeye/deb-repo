@@ -131,7 +131,7 @@
 
 - name: lychee
   url: https://github.com/lycheeverse/lychee/releases/download/lychee-v{{ version }}/lychee-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
-  version: "0.19.1" # repo: lycheeverse/lychee
+  version: "0.24.1" # repo: lycheeverse/lychee
   move_rules:
     - src_regex: lychee
       dst: /usr/local/bin/lychee
