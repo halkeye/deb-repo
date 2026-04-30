@@ -280,3 +280,14 @@
     - src_regex: gotestsum
       dst: /usr/local/bin/gotestsum
       mode: 0755
+
+- name: dlv
+  version: "1.26.3" # repo: go-delve/delve
+  description: Delve is a debugger for the Go programming language.
+  url_overrides:
+    arm64: https://github.com/go-delve/delve/releases/download/v{{ version }}/dlv_{{ version }}_linux_arm64.tar.gz
+    amd64: https://github.com/go-delve/delve/releases/download/v{{ version }}/dlv_{{ version }}_linux_amd64.tar.gz
+  move_rules:
+    - src_regex: dlv
+      dst: /usr/local/bin/dlv
+      mode: 0755
