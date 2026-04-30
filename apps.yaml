@@ -193,8 +193,8 @@
       mode: 0755
 
 - name: git-standup
-  version: "2.3.2" # repo: kamranahmedse/git-standup
-  url: https://raw.githubusercontent.com/kamranahmedse/git-standup/refs/tags/{{ version }}/git-standup
+  version: "2.3.2" # repo: nilbuild/git-standup
+  url: https://raw.githubusercontent.com/nilbuild/git-standup/refs/tags/{{ version }}/git-standup
   move_rules:
     - src_regex: git-standup
       dst: /usr/libexec/git-core/git-standup
