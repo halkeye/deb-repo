@@ -29,7 +29,7 @@
 
 
 - name: helmfile
-  version: "1.4.4" # repo: helmfile/helmfile
+  version: "1.4.5" # repo: helmfile/helmfile
   url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: helmfile.*
@@ -114,7 +114,7 @@
       mode: 0755
 
 - name: stern
-  version: "1.33.1" # repo: stern/stern
+  version: "1.34.0" # repo: stern/stern
   url: https://github.com/stern/stern/releases/download/v{{ version }}/stern_{{ version }}_linux_{{ deb_architecture }}.tar.gz
   move_rules:
     - src_regex: ^stern$
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.14.31" # repo: anomalyco/opencode
+  version: "1.14.33" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
