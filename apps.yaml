@@ -21,7 +21,7 @@
 
 - name: doctl
   url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
-  version: "1.157.0" # repo: digitalocean/doctl
+  version: "1.158.0" # repo: digitalocean/doctl
   move_rules:
     - src_regex: doctl.*
       dst: /usr/local/bin/doctl
@@ -63,7 +63,7 @@
       mode: 0755
 
 - name: typos
-  version: "1.46.0" # repo: crate-ci/typos
+  version: "1.46.1" # repo: crate-ci/typos
   url: https://github.com/crate-ci/typos/releases/download/v{{ version }}/typos-v{{ version }}-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: typos.*
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.14.39" # repo: anomalyco/opencode
+  version: "1.14.41" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
