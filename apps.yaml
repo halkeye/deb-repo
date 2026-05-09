@@ -291,3 +291,12 @@
     - src_regex: dlv
       dst: /usr/local/bin/dlv
       mode: 0755
+
+- name: kubefetch
+  version: "0.8.1" # repo: jkulzer/kubefetch
+  description: neofetch-like tool to show info about you Kubernetes Cluster
+  url: https://github.com/jkulzer/kubefetch/releases/download/{{ version }}/kubefetch
+  move_rules:
+    - src_regex: kubefetch
+      dst: /usr/local/bin/kubefetch
+      mode: 0755
