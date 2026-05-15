@@ -21,7 +21,7 @@
 
 - name: doctl
   url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
-  version: "1.158.0" # repo: digitalocean/doctl
+  version: "1.159.0" # repo: digitalocean/doctl
   move_rules:
     - src_regex: doctl.*
       dst: /usr/local/bin/doctl
@@ -169,7 +169,7 @@
       mode: 0755
 
 - name: tailspin
-  version: "6.0.0" # repo: bensadeh/tailspin
+  version: "6.1.0" # repo: bensadeh/tailspin
   url: https://github.com/bensadeh/tailspin/releases/download/{{ version }}/tailspin-{{ ansible_architecture }}-unknown-linux-musl.tar.gz
   move_rules:
     - src_regex: tspin
@@ -228,7 +228,7 @@
       mode: 0755
 
 - name: opencode
-  version: "1.14.50" # repo: anomalyco/opencode
+  version: "1.15.0" # repo: anomalyco/opencode
   url_overrides:
     arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
     amd64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-x64.tar.gz
