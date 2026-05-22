@@ -300,3 +300,14 @@
     - src_regex: kubefetch
       dst: /usr/local/bin/kubefetch
       mode: 0755
+
+- name: zizmor
+  version: "1.25.2" # repo: zizmorcore/zizmor
+  description:  Static analysis for GitHub Actions 
+  url_overrides:
+    arm64: https://github.com/zizmorcore/zizmor/releases/download/v{{ version }}/zizmor-aarch64-unknown-linux-gnu.tar.gz
+    amd64: https://github.com/zizmorcore/zizmor/releases/download/v{{ version }}/zizmor-x86_64-unknown-linux-gnu.tar.gz
+  move_rules:
+    - src_regex: zizmor
+      dst: /usr/local/bin/zizmor
+      mode: 0755
