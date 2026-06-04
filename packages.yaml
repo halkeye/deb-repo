@@ -12,7 +12,7 @@
 
 - url:     "https://github.com/cli/cli/releases/download/v{{ version }}/gh_{{ version }}_linux_{{ deb_architecture }}.deb"
   name:    "gh"
-  version: "2.92.0" # repo: cli/cli
+  version: "2.93.0" # repo: cli/cli
 
 - url:     "https://github.com/sharkdp/fd/releases/download/v{{ version }}/fd_{{ version }}_{{ deb_architecture }}.deb"
   name:    "fd"
@@ -70,4 +70,4 @@
     arm64: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-amd64.deb"
     amd64: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-aarch64.deb"
   name:    "fastfetch"
-  version: "2.63.1" # repo: fastfetch-cli/fastfetch
+  version: "2.64.0" # repo: fastfetch-cli/fastfetch
