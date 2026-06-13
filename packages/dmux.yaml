@@ -1,0 +1,4 @@
+name: dmux
+version: "c7408aac5e47808094164fe2851c53d65375e806"
+type: cargo-deb
+url: https://github.com/zdcthomas/dmux
