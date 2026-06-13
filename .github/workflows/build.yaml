@@ -39,8 +39,14 @@ jobs:
         with:
           target: ${{ matrix.rust_target }}
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+
+      - name: Install ziglang
+        run: pip install ziglang
+
       - name: Install cargo-deb
-        run: cargo install cargo-deb --locked
+        run: cargo install cargo-deb cargo-zigbuild --locked
 
       - name: Restore cached packages
         id: cache-deb-packages-restore
