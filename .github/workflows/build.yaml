@@ -27,13 +27,23 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v6
         with:
-          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+          python-version: '3.13'
+
+      - name: install zig
+        run: pip3 install ziglang
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
 
       - name: Install cargo-deb
         run: cargo install cargo-deb --locked
+
+      - name: Install zigbuild
+        run: cargo install cargo-zigbuild --locked
 
       - name: Restore cached packages
         id: cache-deb-packages-restore
@@ -46,16 +56,12 @@ jobs:
 
       - name: Install build dependencies
         run: |
+          sudo dpkg --add-architecture arm64
           sudo apt update
-          sudo apt install -y fakeroot cmake protobuf-compiler gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt install -y fakeroot cmake protobuf-compiler gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6:arm64
 
       - name: Create packages
-        run: go run main.go
-        env:
-          # Cross-compile cargo-deb crates to arm64 (amd64 builds natively).
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
-          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+        run: go run main.go --single-app dmux
 
       - name: Save cached packages
         id: cache-deb-packages-save

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pelletier/go-toml/v2"
 	flag "github.com/spf13/pflag"
 	"github.com/ulikunitz/xz"
 	"gopkg.in/yaml.v3"
@@ -528,6 +529,7 @@ func buildDeb(dir, outDeb string) error {
 
 // runCommand runs name+args in dir (cwd when empty), streaming output.
 func runCommand(dir, name string, args ...string) error {
+	log.Printf("%s $ %s %s", dir, name, strings.Join(args, " "))
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
@@ -555,6 +557,30 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 		return fmt.Errorf("creating %s: %w", debDir, err)
 	}
 
+	srcDir := filepath.Join("tmp", "cargo", cargo.Name)
+	if err := cloneCargoSrc(cargo, srcDir); err != nil {
+		return err
+	}
+
+	var cargoToml struct {
+		Package struct {
+			Version string `toml:"version"`
+		}
+	}
+
+	tomlFile, err := os.Open(filepath.Join(srcDir, "Cargo.toml"))
+	if err != nil {
+		return fmt.Errorf("reading Cargo.toml: %w", err)
+	}
+	defer func() { _ = tomlFile.Close() }()
+
+	if err = toml.NewDecoder(tomlFile).Decode(&cargoToml); err != nil {
+		return fmt.Errorf("parsing Cargo.toml: %w", err)
+	}
+	if cargoToml.Package.Version != "" {
+		cargo.Version = cargoToml.Package.Version
+	}
+
 	outDeb, err := filepath.Abs(filepath.Join(debDir, fmt.Sprintf("%s_%s_%s.deb", cargo.Name, cargo.Version, arch.deb)))
 	if err != nil {
 		return fmt.Errorf("resolving output path: %w", err)
@@ -566,13 +592,13 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 		return nil
 	}
 
-	srcDir := filepath.Join("tmp", "cargo", cargo.Name)
-	if err := cloneCargoSrc(cargo, srcDir); err != nil {
-		return err
+	log.Printf("Building with zigbuild %s for %s (%s)", cargo.Name, arch.deb, arch.rust)
+	if err := runCommand(srcDir, "fakeroot", "cargo", "zigbuild", "--release", "--target", arch.rust); err != nil {
+		return fmt.Errorf("cargo zigbuild: %w", err)
 	}
 
 	log.Printf("Building cargo-deb %s for %s (%s)", cargo.Name, arch.deb, arch.rust)
-	if err := runCommand(srcDir, "cargo", "deb", "--target", arch.rust, "--output", outDeb); err != nil {
+	if err := runCommand(srcDir, "fakeroot", "cargo", "deb", "--no-strip", "--no-build", "--target", arch.rust, "--output", outDeb); err != nil {
 		return fmt.Errorf("cargo deb: %w", err)
 	}
 
@@ -582,6 +608,8 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 // cloneCargoSrc clones cargo.Url into dir (once) and checks out cargo.Version
 // (a git ref: tag, sha, or branch). A pre-existing dir is left untouched.
 func cloneCargoSrc(cargo cargoType, dir string) error {
+	defer warnTime("buildCargoDeb "+cargo.Name, 60*time.Second)()
+
 	if _, err := os.Stat(dir); err == nil {
 		return nil
 	}
