@@ -1,5 +1,6 @@
 name: baton
 version: "0.4.5" # repo: ConductorOne/baton
+type: release_asset
 url: https://github.com/ConductorOne/baton/releases/download/v{{ version }}/baton-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
 move_rules:
   - src_regex: baton

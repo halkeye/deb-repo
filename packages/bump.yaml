@@ -1,5 +1,6 @@
 name: bump
 version: "0.2.3" # repo: guilhem/bump
+type: release_asset
 url: https://github.com/guilhem/bump/releases/download/v{{ version }}/bump_Linux_{{ kubectx_architecture }}.tar.gz
 move_rules:
   - src_regex: ^bump$

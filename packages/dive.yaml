@@ -1,3 +1,4 @@
 url:     "https://github.com/wagoodman/dive/releases/download/v{{ version }}/dive_{{ version }}_linux_{{ deb_architecture }}.deb"
 name:    "dive"
 version: "0.13.1" # repo: wagoodman/dive
+type: deb

@@ -1,3 +1,4 @@
 url:     "https://github.com/ajeetdsouza/zoxide/releases/download/v{{ version }}/zoxide_{{ version }}-1_{{ deb_architecture }}.deb"
 name:    "zoxide"
 version: "0.9.9" # repo: ajeetdsouza/zoxide
+type: deb

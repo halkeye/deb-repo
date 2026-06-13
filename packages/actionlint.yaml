@@ -1,6 +1,7 @@
 ---
 name: actionlint
 version: "1.7.12" # repo: rhysd/actionlint
+type: release_asset
 url: https://github.com/rhysd/actionlint/releases/download/v{{ version }}/actionlint_{{ version }}_linux_{{ deb_architecture }}.tar.gz
 move_rules:
   - src_regex: ^actionlint$

@@ -1,6 +1,7 @@
 name: regclient
 url: https://github.com/regclient/regclient/releases/download/v{{ version }}/regctl-linux-{{ deb_architecture }}
 version: "0.11.5" # repo: regclient/regclient
+type: release_asset
 move_rules:
   - src_regex: regctl.*
     dst: /usr/local/bin/regctl

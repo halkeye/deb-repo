@@ -1,5 +1,6 @@
 name: zizmor
 version: "1.25.2" # repo: zizmorcore/zizmor
+type: release_asset
 description:  Static analysis for GitHub Actions 
 url_overrides:
   arm64: https://github.com/zizmorcore/zizmor/releases/download/v{{ version }}/zizmor-aarch64-unknown-linux-gnu.tar.gz

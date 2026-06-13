@@ -1,3 +1,4 @@
 url:     "https://github.com/aymanbagabas/shcopy/releases/download/v{{ version }}/shcopy_{{ version }}_linux_{{ deb_architecture }}.deb"
 name:    "shcopy"
 version: "0.1.5" # repo: aymanbagabas/shcopy
+type: deb

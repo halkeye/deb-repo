@@ -1,5 +1,6 @@
 name: gotestsum
 version: "1.13.0" # repo: gotestyourself/gotestsum
+type: release_asset
 description: "'go test' runner with output optimized for humans, JUnit XML for CI integration, and a summary of the test results."
 url_overrides:
   arm64: https://github.com/gotestyourself/gotestsum/releases/download/v{{ version }}/gotestsum_{{ version }}_linux_arm64.tar.gz

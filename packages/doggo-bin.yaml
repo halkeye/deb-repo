@@ -1,5 +1,6 @@
 name: doggo-bin
 version: "1.1.7" # repo: mr-karan/doggo
+type: release_asset
 description: Command-line DNS Client for Humans.
 url: https://github.com/mr-karan/doggo/releases/download/v{{ version }}/doggo_{{ version }}_Linux_{{ kubectx_architecture }}.tar.gz
 move_rules:

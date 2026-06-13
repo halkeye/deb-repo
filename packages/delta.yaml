@@ -1,3 +1,4 @@
 url:     "https://github.com/dandavison/delta/releases/download/{{ version }}/git-delta_{{ version }}_{{ deb_architecture }}.deb"
 name:    "delta"
 version: "0.19.2" # repo: dandavison/delta
+type: deb

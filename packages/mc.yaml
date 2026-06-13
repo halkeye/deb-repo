@@ -1,3 +1,4 @@
 url:     "https://dl.min.io/client/mc/release/linux-{{ deb_architecture }}/archive/mcli_{{ version }}.0.0_{{ deb_architecture }}.deb"
 name:    "mc"
 version: "20250416181326" # repo: minio/mc
+type: deb

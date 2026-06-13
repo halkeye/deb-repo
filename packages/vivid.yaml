@@ -1,3 +1,4 @@
 url:     "https://github.com/sharkdp/vivid/releases/download/v{{ version }}/vivid_{{ version }}_{{ deb_architecture }}.deb"
 name:    "vivid"
 version: "0.11.1" # repo: sharkdp/vivid
+type: deb

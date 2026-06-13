@@ -33,6 +33,7 @@ type appType struct {
 	Name          string            `yaml:"name"`
 	Url           string            `yaml:"url"`
 	Version       string            `yaml:"version"`
+	Type          string            `yaml:"type"`
 	UrlOverrides  map[string]string `yaml:"url_overrides"`
 	ArchOverrides map[string]string `yaml:"arch_verrides"`
 	MoveRules     []struct {
@@ -225,17 +226,20 @@ func loadYaml() ([]pkgType, []appType, error) {
 				return fmt.Errorf("decoding %s: %w", match, err)
 			}
 
-			// Entries with move/extra-file rules are built from archives (apps);
-			// everything else is a prebuilt .deb (pkg).
-			if len(app.MoveRules) > 0 || len(app.ExtraFiles) > 0 {
-				apps = append(apps, app)
-			} else {
+			// "deb" entries are prebuilt .deb downloads (pkg); "release_asset"
+			// entries are built from release archives/binaries (app).
+			switch app.Type {
+			case "deb":
 				pkgs = append(pkgs, pkgType{
 					Url:          app.Url,
 					Name:         app.Name,
 					Version:      app.Version,
 					UrlOverrides: app.UrlOverrides,
 				})
+			case "release_asset":
+				apps = append(apps, app)
+			default:
+				return fmt.Errorf("unknown type %q (want \"deb\" or \"release_asset\")", app.Type)
 			}
 			return nil
 		}()

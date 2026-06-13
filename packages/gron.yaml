@@ -1,5 +1,6 @@
 name: gron
 version: "0.7.1" # repo: tomnomnom/gron
+type: release_asset
 url: https://github.com/tomnomnom/gron/releases/download/v{{ version }}/gron-linux-{{ deb_architecture }}-{{ version }}.tgz
 move_rules:
   - src_regex: ^gron$

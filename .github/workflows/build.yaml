@@ -36,6 +36,11 @@ jobs:
             tmp/arm64
           key: packages-${{ hashFiles('main.go') }}
 
+      - name: Install fakeroot
+        run: |
+          sudo apt update
+          sudo apt install -y fakeroot
+
       - name: Create packages
         run: go run main.go
 

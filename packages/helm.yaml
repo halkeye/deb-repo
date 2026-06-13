@@ -1,5 +1,6 @@
 name: helm
 version: "4.2.0" # repo: helm/helm
+type: release_asset
 url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
 move_rules:
   - src_regex: helm

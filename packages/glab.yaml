@@ -1,3 +1,4 @@
 url:     "https://gitlab.com/gitlab-org/cli/-/releases/v{{ version }}/downloads/glab_{{ version }}_linux_{{ deb_architecture }}.deb"
 name:    "glab"
 version: "1.59.2" # gitlab_repo: gitlab-org/cli
+type: deb
