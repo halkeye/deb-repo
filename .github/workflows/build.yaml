@@ -14,7 +14,65 @@ permissions:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            rust_target: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.rust_target }}
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
+      - name: Restore cached packages
+        id: cache-deb-packages-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: tmp/${{ matrix.arch }}
+          key: packages-${{ matrix.arch }}-${{ hashFiles('main.go', 'packages/*.yaml') }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y fakeroot cmake protobuf-compiler
+
+      - name: Create packages
+        run: go run main.go --arch ${{ matrix.arch }}
+
+      - name: Save cached packages
+        id: cache-deb-packages-save
+        uses: actions/cache/save@v5
+        with:
+          path: tmp/${{ matrix.arch }}
+          key: ${{ steps.cache-deb-packages-restore.outputs.cache-primary-key }}
+
+      - name: Upload built debs
+        uses: actions/upload-artifact@v5
+        with:
+          name: debs-${{ matrix.arch }}
+          path: tmp/${{ matrix.arch }}
+
+  combine:
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -22,57 +80,13 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
-      - name: Setup Go
-        uses: actions/setup-go@v6
+      - name: Download built debs
+        uses: actions/download-artifact@v5
         with:
-          go-version-file: 'go.mod'
+          pattern: debs-*
+          path: tmp
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-
-      - name: install zig
-        run: pip3 install ziglang
-
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
-
-      - name: Install cargo-deb
-        run: cargo install cargo-deb --locked
-
-      - name: Install zigbuild
-        run: cargo install cargo-zigbuild --locked
-
-      - name: Restore cached packages
-        id: cache-deb-packages-restore
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            tmp/amd64
-            tmp/arm64
-          key: packages-${{ hashFiles('main.go', 'packages/*.yaml') }}
-
-      - name: Install build dependencies
-        run: |
-          sudo dpkg --add-architecture arm64
-          sudo apt update
-          sudo apt install -y fakeroot cmake protobuf-compiler gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6:arm64
-
-      - name: Create packages
-        run: go run main.go --single-app dmux
-
-      - name: Save cached packages
-        id: cache-deb-packages-save
-        uses: actions/cache/save@v5
-        with:
-          path: |
-            tmp/amd64
-            tmp/arm64
-          key: ${{ steps.cache-deb-packages-restore.outputs.cache-primary-key }}
-
-      - name: Install
+      - name: Install reprepro
         run: |
           sudo apt update
           sudo apt install -y reprepro
@@ -97,17 +111,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: combine
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
-
-      # - name: Adding summary
-      #   run: |
-      #     echo ':rocket:' >> $GITHUB_STEP_SUMMARY
-      #     echo '' >> $GITHUB_STEP_SUMMARY
-      #     echo '```bash' >> $GITHUB_STEP_SUMMARY
-      #     echo 'curl -sfLo /etc/apt.trusted.gpg.d/${{ needs.build.outputs.keyring }}.asc ${{ steps.deploy-pages.outputs.page_url }}gpg.key' >> $GITHUB_STEP_SUMMARY
-      #     echo 'echo "deb ${{ steps.deploy-pages.outputs.page_url }} ${{ env.CODENAME }} ${{ env.COMPONENTS }}" >/etc/apt/sources.list.d/${{ env.REPO_NAME }}.list' >> $GITHUB_STEP_SUMMARY
-      #     echo '```' >> $GITHUB_STEP_SUMMARY

@@ -180,7 +180,21 @@ func main() {
 	var err error
 
 	var singleApp = flag.String("single-app", "", "only process single app")
+	var singleArch = flag.String("arch", "", "only build a single arch (e.g. amd64 or arm64)")
 	flag.Parse()
+
+	if singleArch != nil && *singleArch != "" {
+		var filtered []archType
+		for _, arch := range archs {
+			if arch.deb == *singleArch {
+				filtered = append(filtered, arch)
+			}
+		}
+		if len(filtered) == 0 {
+			log.Fatalf("unknown arch %q", *singleArch)
+		}
+		archs = filtered
+	}
 
 	pkgs, apps, cargos, err := loadYaml()
 	if err != nil {
