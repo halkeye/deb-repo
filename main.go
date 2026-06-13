@@ -29,6 +29,16 @@ type pkgType struct {
 	UrlOverrides map[string]string `yaml:"url_overrides"`
 }
 
+// cargoType is a Rust crate packaged into a .deb with cargo-deb
+// (https://github.com/kornelski/cargo-deb). The git repo is cloned, an
+// optional branch/sha is checked out, then cargo-deb builds one .deb per arch.
+type cargoType struct {
+	Name string `yaml:"name"`
+	Url  string `yaml:"url"`
+	// Version is a git ref (tag, sha, or branch) to check out before building.
+	Version string `yaml:"version"`
+}
+
 type appType struct {
 	Name          string            `yaml:"name"`
 	Url           string            `yaml:"url"`
@@ -96,6 +106,7 @@ type archType struct {
 	deb     string
 	ansible string
 	kubectx string
+	rust    string
 }
 
 type readerFunc func(r io.Reader) (io.Reader, error)
@@ -112,11 +123,13 @@ var (
 			kubectx: "x86_64",
 			deb:     "amd64",
 			ansible: "x86_64",
+			rust:    "x86_64-unknown-linux-gnu",
 		},
 		{
 			deb:     "arm64",
 			kubectx: "arm64",
 			ansible: "aarch64",
+			rust:    "aarch64-unknown-linux-gnu",
 		},
 	}
 )
@@ -168,7 +181,7 @@ func main() {
 	var singleApp = flag.String("single-app", "", "only process single app")
 	flag.Parse()
 
-	pkgs, apps, err := loadYaml()
+	pkgs, apps, cargos, err := loadYaml()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -185,11 +198,20 @@ func main() {
 				break
 			}
 		}
+		for _, cargo := range cargos {
+			if cargo.Name == *singleApp {
+				cargos = []cargoType{cargo}
+				break
+			}
+		}
 		if len(pkgs) > 1 {
 			pkgs = []pkgType{}
 		}
 		if len(apps) > 1 {
 			apps = []appType{}
+		}
+		if len(cargos) > 1 {
+			cargos = []cargoType{}
 		}
 	}
 
@@ -202,15 +224,21 @@ func main() {
 	if err != nil {
 		log.Fatal(fmt.Errorf("downloadApps: %w", err))
 	}
+
+	err = downloadCargoDebs(cargos)
+	if err != nil {
+		log.Fatal(fmt.Errorf("downloadCargoDebs: %w", err))
+	}
 }
 
-func loadYaml() ([]pkgType, []appType, error) {
+func loadYaml() ([]pkgType, []appType, []cargoType, error) {
 	pkgs := []pkgType{}
 	apps := []appType{}
+	cargos := []cargoType{}
 
 	matches, err := filepath.Glob(filepath.Join("packages", "*.yaml"))
 	if err != nil {
-		return pkgs, apps, fmt.Errorf("globbing packages: %w", err)
+		return pkgs, apps, cargos, fmt.Errorf("globbing packages: %w", err)
 	}
 
 	for _, match := range matches {
@@ -227,7 +255,8 @@ func loadYaml() ([]pkgType, []appType, error) {
 			}
 
 			// "deb" entries are prebuilt .deb downloads (pkg); "release_asset"
-			// entries are built from release archives/binaries (app).
+			// entries are built from release archives/binaries (app);
+			// "cargo-deb" entries are Rust crates built from source with cargo-deb.
 			switch app.Type {
 			case "deb":
 				pkgs = append(pkgs, pkgType{
@@ -238,17 +267,23 @@ func loadYaml() ([]pkgType, []appType, error) {
 				})
 			case "release_asset":
 				apps = append(apps, app)
+			case "cargo-deb":
+				cargos = append(cargos, cargoType{
+					Name:    app.Name,
+					Url:     app.Url,
+					Version: app.Version,
+				})
 			default:
-				return fmt.Errorf("unknown type %q (want \"deb\" or \"release_asset\")", app.Type)
+				return fmt.Errorf("unknown type %q (want \"deb\", \"release_asset\" or \"cargo-deb\")", app.Type)
 			}
 			return nil
 		}()
 		if err != nil {
-			return pkgs, apps, fmt.Errorf("processing %s: %w", match, err)
+			return pkgs, apps, cargos, fmt.Errorf("processing %s: %w", match, err)
 		}
 	}
 
-	return pkgs, apps, nil
+	return pkgs, apps, cargos, nil
 
 }
 
@@ -489,6 +524,82 @@ func buildDeb(dir, outDeb string) error {
 	cmd := exec.Command("fakeroot", "dpkg-deb", "--build", dir, outDeb)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return cmd.Run()
+}
+
+// runCommand runs name+args in dir (cwd when empty), streaming output.
+func runCommand(dir, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	return cmd.Run()
+}
+
+func downloadCargoDebs(cargos []cargoType) error {
+	for _, arch := range archs {
+		for _, cargo := range cargos {
+			if err := buildCargoDeb(cargo, arch); err != nil {
+				return fmt.Errorf("building cargo-deb %s for %s: %w", cargo.Name, arch.deb, err)
+			}
+		}
+	}
+	return nil
+}
+
+// buildCargoDeb clones a Rust crate, checks out its ref, and runs cargo-deb to
+// produce a .deb for the given arch in tmp/<arch>/.
+func buildCargoDeb(cargo cargoType, arch archType) error {
+	defer warnTime("buildCargoDeb "+cargo.Name+" "+arch.deb, 60*time.Second)()
+
+	debDir := filepath.Join("tmp", arch.deb)
+	if err := os.MkdirAll(debDir, 0o755); err != nil {
+		return fmt.Errorf("creating %s: %w", debDir, err)
+	}
+
+	outDeb, err := filepath.Abs(filepath.Join(debDir, fmt.Sprintf("%s_%s_%s.deb", cargo.Name, cargo.Version, arch.deb)))
+	if err != nil {
+		return fmt.Errorf("resolving output path: %w", err)
+	}
+
+	// Skip if already built (e.g. restored from the CI package cache).
+	if _, err := os.Stat(outDeb); err == nil {
+		log.Printf("cargo-deb %s for %s already built, skipping", cargo.Name, arch.deb)
+		return nil
+	}
+
+	srcDir := filepath.Join("tmp", "cargo", cargo.Name)
+	if err := cloneCargoSrc(cargo, srcDir); err != nil {
+		return err
+	}
+
+	log.Printf("Building cargo-deb %s for %s (%s)", cargo.Name, arch.deb, arch.rust)
+	if err := runCommand(srcDir, "cargo", "deb", "--target", arch.rust, "--output", outDeb); err != nil {
+		return fmt.Errorf("cargo deb: %w", err)
+	}
+
+	return nil
+}
+
+// cloneCargoSrc clones cargo.Url into dir (once) and checks out cargo.Version
+// (a git ref: tag, sha, or branch). A pre-existing dir is left untouched.
+func cloneCargoSrc(cargo cargoType, dir string) error {
+	if _, err := os.Stat(dir); err == nil {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(dir), 0o755); err != nil {
+		return fmt.Errorf("creating cargo src parent: %w", err)
+	}
+
+	if err := runCommand("", "git", "clone", cargo.Url, dir); err != nil {
+		return fmt.Errorf("cloning %s: %w", cargo.Url, err)
+	}
+
+	if cargo.Version != "" {
+		if err := runCommand(dir, "git", "checkout", cargo.Version); err != nil {
+			return fmt.Errorf("checking out ref %s: %w", cargo.Version, err)
+		}
+	}
+
+	return nil
 }
 
 func warnTime(process string, warnTime time.Duration) func() {

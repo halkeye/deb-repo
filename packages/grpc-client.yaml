@@ -1,0 +1,4 @@
+name: grpc-client
+version: "8d9e0d40de84d4341998dc72199e9211ffeb62b4"
+type: cargo-deb
+url: https://github.com/tyrchen/grpc-client

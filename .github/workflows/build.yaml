@@ -27,6 +27,14 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
       - name: Restore cached packages
         id: cache-deb-packages-restore
         uses: actions/cache/restore@v5
@@ -34,15 +42,20 @@ jobs:
           path: |
             tmp/amd64
             tmp/arm64
-          key: packages-${{ hashFiles('main.go') }}
+          key: packages-${{ hashFiles('main.go', 'packages/*.yaml') }}
 
-      - name: Install fakeroot
+      - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install -y fakeroot
+          sudo apt install -y fakeroot cmake protobuf-compiler gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Create packages
         run: go run main.go
+        env:
+          # Cross-compile cargo-deb crates to arm64 (amd64 builds natively).
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
 
       - name: Save cached packages
         id: cache-deb-packages-save
