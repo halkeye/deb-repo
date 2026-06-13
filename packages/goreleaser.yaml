@@ -1,0 +1,3 @@
+url:     "https://github.com/goreleaser/goreleaser/releases/download/v{{ version }}/goreleaser_{{ version }}_{{ deb_architecture }}.deb"
+name:    "goreleaser"
+version: "2.16.0" # repo: goreleaser/goreleaser

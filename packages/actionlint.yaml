@@ -1,0 +1,8 @@
+---
+name: actionlint
+version: "1.7.12" # repo: rhysd/actionlint
+url: https://github.com/rhysd/actionlint/releases/download/v{{ version }}/actionlint_{{ version }}_linux_{{ deb_architecture }}.tar.gz
+move_rules:
+  - src_regex: ^actionlint$
+    dst: /usr/local/bin/actionlint
+    mode: 0755

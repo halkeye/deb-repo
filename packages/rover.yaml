@@ -1,0 +1,7 @@
+name: rover
+version: "0.40.0" # repo: apollographql/rover
+url: https://github.com/apollographql/rover/releases/download/v{{ version }}/rover-v{{ version }}-{{ ansible_architecture }}-unknown-linux-gnu.tar.gz
+move_rules:
+  - src_regex: dist/rover
+    dst: /usr/local/bin/rover
+    mode: 0755

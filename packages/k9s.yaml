@@ -1,0 +1,3 @@
+url:     "https://github.com/derailed/k9s/releases/download/v{{ version }}/k9s_linux_{{ deb_architecture }}.deb"
+name:    "k9s"
+version: "0.51.0" # repo: derailed/k9s

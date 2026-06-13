@@ -1,0 +1,7 @@
+name: baton
+version: "0.4.5" # repo: ConductorOne/baton
+url: https://github.com/ConductorOne/baton/releases/download/v{{ version }}/baton-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
+move_rules:
+  - src_regex: baton
+    dst: /usr/local/bin/baton
+    mode: 0755

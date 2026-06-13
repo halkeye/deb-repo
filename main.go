@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var errUnknownExtension = errors.New("unknown extension")
+// var errUnknownExtension = errors.New("unknown extension")
 
 type pkgType struct {
 	Url          string            `yaml:"url"`
@@ -141,7 +141,7 @@ func downloadURL(dir string, filename string, url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to download URL: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to download URL %s: status code %d", url, resp.StatusCode)
@@ -152,7 +152,7 @@ func downloadURL(dir string, filename string, url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file: %v", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if _, err := io.Copy(file, resp.Body); err != nil {
 		return fmt.Errorf("failed to read response body: %v", err)
@@ -164,7 +164,7 @@ func downloadURL(dir string, filename string, url string) error {
 func main() {
 	var err error
 
-	var singleApp *string = flag.String("single-app", "", "only process single app")
+	var singleApp = flag.String("single-app", "", "only process single app")
 	flag.Parse()
 
 	pkgs, apps, err := loadYaml()
@@ -207,26 +207,41 @@ func loadYaml() ([]pkgType, []appType, error) {
 	pkgs := []pkgType{}
 	apps := []appType{}
 
-	yamlFile, err := os.Open("packages.yaml")
+	matches, err := filepath.Glob(filepath.Join("packages", "*.yaml"))
 	if err != nil {
-		return pkgs, apps, fmt.Errorf("reading packages.yaml: %w", err)
-	}
-	defer yamlFile.Close()
-
-	yamlDecoder := yaml.NewDecoder(yamlFile)
-	if err := yamlDecoder.Decode(&pkgs); err != nil {
-		return pkgs, apps, fmt.Errorf("decoding pkgs: %w", err)
+		return pkgs, apps, fmt.Errorf("globbing packages: %w", err)
 	}
 
-	yamlFile, err = os.Open("apps.yaml")
-	if err != nil {
-		return pkgs, apps, fmt.Errorf("reading apps.yaml: %w", err)
-	}
-	defer yamlFile.Close()
+	for _, match := range matches {
+		err := func() error {
+			yamlFile, err := os.Open(match)
+			if err != nil {
+				return fmt.Errorf("reading %s: %w", match, err)
+			}
+			defer func() { _ = yamlFile.Close() }()
 
-	yamlDecoder = yaml.NewDecoder(yamlFile)
-	if err := yamlDecoder.Decode(&apps); err != nil {
-		return pkgs, apps, fmt.Errorf("decoding apps: %w", err)
+			var app appType
+			if err := yaml.NewDecoder(yamlFile).Decode(&app); err != nil {
+				return fmt.Errorf("decoding %s: %w", match, err)
+			}
+
+			// Entries with move/extra-file rules are built from archives (apps);
+			// everything else is a prebuilt .deb (pkg).
+			if len(app.MoveRules) > 0 || len(app.ExtraFiles) > 0 {
+				apps = append(apps, app)
+			} else {
+				pkgs = append(pkgs, pkgType{
+					Url:          app.Url,
+					Name:         app.Name,
+					Version:      app.Version,
+					UrlOverrides: app.UrlOverrides,
+				})
+			}
+			return nil
+		}()
+		if err != nil {
+			return pkgs, apps, fmt.Errorf("processing %s: %w", match, err)
+		}
 	}
 
 	return pkgs, apps, nil
@@ -396,7 +411,7 @@ func unarchive(file string, reader readerFunc, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	archiveReader, err := reader(f)
 	if err != nil {
@@ -404,7 +419,7 @@ func unarchive(file string, reader readerFunc, dst string) error {
 	}
 
 	if closeReader, ok := archiveReader.(io.ReadCloser); ok {
-		defer closeReader.Close()
+		defer func() { _ = closeReader.Close() }()
 	}
 
 	tr := tar.NewReader(archiveReader)
@@ -424,18 +439,22 @@ func unarchive(file string, reader readerFunc, dst string) error {
 				return err
 			}
 		case tar.TypeReg:
-			if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			err = func() error {
+				if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+					return err
+				}
+				out, err := os.Create(target)
+				if err != nil {
+					return err
+				}
+				defer func() { _ = out.Close() }()
+
+				_, err = io.Copy(out, tr)
 				return err
-			}
-			out, err := os.Create(target)
+			}()
 			if err != nil {
 				return err
 			}
-			if _, err = io.Copy(out, tr); err != nil {
-				out.Close()
-				return err
-			}
-			out.Close()
 		default:
 			log.Printf("skip %s (type %c)", h.Name, h.Typeflag)
 		}

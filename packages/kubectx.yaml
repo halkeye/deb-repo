@@ -1,0 +1,7 @@
+name: kubectx
+version: "0.11.0" # repo: ahmetb/kubectx
+url: https://github.com/ahmetb/kubectx/releases/download/v{{ version }}/kubectx_v{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
+move_rules:
+  - src_regex: kubectx.*
+    dst: /usr/local/bin/kubectx
+    mode: 0755

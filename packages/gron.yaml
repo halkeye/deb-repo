@@ -1,0 +1,7 @@
+name: gron
+version: "0.7.1" # repo: tomnomnom/gron
+url: https://github.com/tomnomnom/gron/releases/download/v{{ version }}/gron-linux-{{ deb_architecture }}-{{ version }}.tgz
+move_rules:
+  - src_regex: ^gron$
+    dst: /usr/local/bin/gron
+    mode: 0755

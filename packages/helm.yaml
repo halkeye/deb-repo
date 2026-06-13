@@ -1,0 +1,7 @@
+name: helm
+version: "4.2.0" # repo: helm/helm
+url: https://get.helm.sh/helm-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
+move_rules:
+  - src_regex: helm
+    dst: /usr/local/bin/helm
+    mode: 0755

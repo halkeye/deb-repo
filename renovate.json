@@ -7,8 +7,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/apps.yaml$/",
-        "/packages.yaml$/"
+        "/packages/.+\\.yaml$/"
       ],
       "matchStrings": [
         "version: \"(?<currentValue>.+?)\" # repo: (?<depName>.*)"

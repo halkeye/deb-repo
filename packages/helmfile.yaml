@@ -1,0 +1,7 @@
+name: helmfile
+version: "1.5.3" # repo: helmfile/helmfile
+url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
+move_rules:
+  - src_regex: helmfile.*
+    dst: /usr/local/bin/helmfile
+    mode: 0755

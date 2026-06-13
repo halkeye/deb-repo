@@ -1,0 +1,7 @@
+name: stern
+version: "1.34.0" # repo: stern/stern
+url: https://github.com/stern/stern/releases/download/v{{ version }}/stern_{{ version }}_linux_{{ deb_architecture }}.tar.gz
+move_rules:
+  - src_regex: ^stern$
+    dst: /usr/local/bin/stern
+    mode: 0755
