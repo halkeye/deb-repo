@@ -179,7 +179,7 @@ func downloadURL(dir string, filename string, url string) error {
 func main() {
 	var err error
 
-	var singleApp = flag.String("single-app", "", "only process single app")
+	var singleApp = flag.String("app", "", "only process single app")
 	var singleArch = flag.String("arch", "", "only build a single arch (e.g. amd64 or arm64)")
 	flag.Parse()
 
@@ -576,11 +576,7 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 		return err
 	}
 
-	var cargoToml struct {
-		Package struct {
-			Version string `toml:"version"`
-		}
-	}
+	cargoToml := map[string]interface{}{}
 
 	tomlFile, err := os.Open(filepath.Join(srcDir, "Cargo.toml"))
 	if err != nil {
@@ -591,8 +587,38 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 	if err = toml.NewDecoder(tomlFile).Decode(&cargoToml); err != nil {
 		return fmt.Errorf("parsing Cargo.toml: %w", err)
 	}
-	if cargoToml.Package.Version != "" {
-		cargo.Version = cargoToml.Package.Version
+
+	if cargoToml["package"].(map[string]interface{})["version"] != "" {
+		cargo.Version = cargoToml["package"].(map[string]interface{})["version"].(string)
+	}
+
+	needsChanging := false
+	if cargoToml["package.metadata.deb"] == nil {
+		cargoToml["package.metadata.deb"] = map[string]interface{}{}
+	}
+
+	if cargoToml["package.metadata.deb"].(map[string]interface{})["section"] == "" {
+		needsChanging = true
+		cargoToml["package.metadata.deb"].(map[string]interface{})["section"] = "extra"
+	}
+
+	if cargoToml["package.metadata.deb"].(map[string]interface{})["priority"] == "" {
+		needsChanging = true
+		cargoToml["package.metadata.deb"].(map[string]interface{})["priority"] = "optional"
+	}
+
+	if needsChanging {
+		tomlFile, err = os.Create(filepath.Join(srcDir, "Cargo.toml"))
+		if err != nil {
+			return fmt.Errorf("opening Cargo.toml for writing: %w", err)
+		}
+
+		defer func() { _ = tomlFile.Close() }()
+
+		if err = toml.NewEncoder(tomlFile).Encode(cargoToml); err != nil {
+			return fmt.Errorf("updating Cargo.toml: %w", err)
+		}
+		_ = tomlFile.Close()
 	}
 
 	outDeb, err := filepath.Abs(filepath.Join(debDir, fmt.Sprintf("%s_%s_%s.deb", cargo.Name, cargo.Version, arch.deb)))
