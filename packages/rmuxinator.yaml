@@ -1,0 +1,4 @@
+name: rmuxinator
+version: "c813fc1f5254816c61003d3399105039139f1b60"
+type: cargo-deb
+url: https://github.com/ethagnawl/rmuxinator
