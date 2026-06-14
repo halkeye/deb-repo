@@ -593,19 +593,45 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 	}
 
 	needsChanging := false
-	if cargoToml["package.metadata.deb"] == nil {
-		cargoToml["package.metadata.deb"] = map[string]any{}
+
+	// Ensure package exists
+	if cargoToml["package"] == nil {
+		cargoToml["package"] = map[string]any{}
+	}
+	packageMap, ok := cargoToml["package"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("package is not a map")
 	}
 
-	if cargoToml["package.metadata.deb"].(map[string]any)["section"] == "" {
-		needsChanging = true
-		cargoToml["package.metadata.deb"].(map[string]any)["section"] = "extra"
+	// Ensure metadata exists
+	if packageMap["metadata"] == nil {
+		packageMap["metadata"] = map[string]any{}
+	}
+	metadataMap, ok := packageMap["metadata"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("package.metadata is not a map")
 	}
 
-	if cargoToml["package.metadata.deb"].(map[string]any)["priority"] == "" {
-		needsChanging = true
-		cargoToml["package.metadata.deb"].(map[string]any)["priority"] = "optional"
+	// Ensure deb exists
+	if metadataMap["deb"] == nil {
+		metadataMap["deb"] = map[string]any{}
 	}
+	debMap, ok := metadataMap["deb"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("package.metadata.deb is not a map")
+	}
+
+	if debMap["section"] == nil {
+		needsChanging = true
+		debMap["section"] = "extra"
+	}
+
+	if debMap["priority"] == nil {
+		needsChanging = true
+		debMap["priority"] = "optional"
+	}
+
+	log.Printf("Needs Changing: %t\n", needsChanging)
 
 	if needsChanging {
 		tomlFile, err = os.Create(filepath.Join(srcDir, "Cargo.toml"))
