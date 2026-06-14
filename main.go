@@ -576,7 +576,7 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 		return err
 	}
 
-	cargoToml := map[string]interface{}{}
+	cargoToml := map[string]any{}
 
 	tomlFile, err := os.Open(filepath.Join(srcDir, "Cargo.toml"))
 	if err != nil {
@@ -588,23 +588,23 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 		return fmt.Errorf("parsing Cargo.toml: %w", err)
 	}
 
-	if cargoToml["package"].(map[string]interface{})["version"] != "" {
-		cargo.Version = cargoToml["package"].(map[string]interface{})["version"].(string)
+	if cargoToml["package"].(map[string]any)["version"] != "" {
+		cargo.Version = cargoToml["package"].(map[string]any)["version"].(string)
 	}
 
 	needsChanging := false
 	if cargoToml["package.metadata.deb"] == nil {
-		cargoToml["package.metadata.deb"] = map[string]interface{}{}
+		cargoToml["package.metadata.deb"] = map[string]any{}
 	}
 
-	if cargoToml["package.metadata.deb"].(map[string]interface{})["section"] == "" {
+	if cargoToml["package.metadata.deb"].(map[string]any)["section"] == "" {
 		needsChanging = true
-		cargoToml["package.metadata.deb"].(map[string]interface{})["section"] = "extra"
+		cargoToml["package.metadata.deb"].(map[string]any)["section"] = "extra"
 	}
 
-	if cargoToml["package.metadata.deb"].(map[string]interface{})["priority"] == "" {
+	if cargoToml["package.metadata.deb"].(map[string]any)["priority"] == "" {
 		needsChanging = true
-		cargoToml["package.metadata.deb"].(map[string]interface{})["priority"] = "optional"
+		cargoToml["package.metadata.deb"].(map[string]any)["priority"] = "optional"
 	}
 
 	if needsChanging {
