@@ -1,5 +1,5 @@
 name: helmfile
-version: "1.5.3" # repo: helmfile/helmfile
+version: "1.5.5" # repo: helmfile/helmfile
 type: release_asset
 url: https://github.com/helmfile/helmfile/releases/download/v{{ version }}/helmfile_{{ version }}_linux_{{ deb_architecture }}.tar.gz
 move_rules:

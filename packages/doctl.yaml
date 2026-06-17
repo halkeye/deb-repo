@@ -1,6 +1,6 @@
 name: doctl
 url: https://github.com/digitalocean/doctl/releases/download/v{{ version }}/doctl-{{ version }}-linux-{{ deb_architecture }}.tar.gz
-version: "1.161.0" # repo: digitalocean/doctl
+version: "1.162.0" # repo: digitalocean/doctl
 type: release_asset
 move_rules:
   - src_regex: doctl.*
