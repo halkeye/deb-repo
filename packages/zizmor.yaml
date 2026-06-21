@@ -1,5 +1,5 @@
 name: zizmor
-version: "1.25.2" # repo: zizmorcore/zizmor
+version: "1.26.1" # repo: zizmorcore/zizmor
 type: release_asset
 description:  Static analysis for GitHub Actions 
 url_overrides:
