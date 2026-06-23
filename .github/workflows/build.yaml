@@ -50,7 +50,7 @@ jobs:
 
       - name: Restore cached packages
         id: cache-deb-packages-restore
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: tmp/${{ matrix.arch }}
           key: packages-${{ matrix.arch }}-${{ hashFiles('main.go', 'packages/*.yaml') }}
@@ -65,7 +65,7 @@ jobs:
 
       - name: Save cached packages
         id: cache-deb-packages-save
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: tmp/${{ matrix.arch }}
           key: ${{ steps.cache-deb-packages-restore.outputs.cache-primary-key }}
