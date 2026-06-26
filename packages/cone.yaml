@@ -1,5 +1,5 @@
 name: cone
-version: "0.0.40" # repo: ConductorOne/cone
+version: "0.0.39" # repo: ConductorOne/cone
 type: release_asset
 url: https://github.com/ConductorOne/cone/releases/download/v{{ version }}/cone-v{{ version }}-linux-{{ deb_architecture }}.tar.gz
 move_rules:
