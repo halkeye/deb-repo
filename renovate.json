@@ -3,6 +3,7 @@
   "extends": [
     "github>halkeye/halkeye//.github/renovate/base.json5"
   ],
+  "minimumReleaseAge": "7 days",
   "customManagers": [
     {
       "customType": "regex",
