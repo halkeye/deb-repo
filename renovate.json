@@ -14,6 +14,18 @@
         "version: \"(?<currentValue>.+?)\" # repo: (?<depName>.*)"
       ],
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/packages/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "version: \"(?<currentValue>.+?)\" # kustomize-repo: (?<depName>.*)"
+      ],
+      "extractVersionTemplate": "^kustomize/(?<version>.*)$",
+      "depNameTemplate": "kubernetes-sigs/kustomize",
+      "datasourceTemplate": "github-releases"
     }
   ]
 }
