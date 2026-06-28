@@ -1,5 +1,5 @@
 name: kustomize
-version: "5.8.0" # repo: kubernetes-sigs/kustomize
+version: "5.8.1" # repo: kubernetes-sigs/kustomize
 type: release_asset
 url: https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv{{ version }}/kustomize_v{{ version }}_linux_{{ deb_architecture }}.tar.gz
 move_rules:
