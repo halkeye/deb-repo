@@ -1,0 +1,85 @@
+name: PR Package Build
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - 'packages/*.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.changed-apps.outputs.apps }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get changed apps
+        id: changed-apps
+        run: |
+          # Get list of changed package files
+          changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- 'packages/*.yaml')
+
+          # Extract app names (filename without .yaml extension)
+          apps="[]"
+          if [ -n "$changed_files" ]; then
+            apps=$(echo "$changed_files" | xargs -I {} basename {} .yaml | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+
+          echo "apps=$apps" >> $GITHUB_OUTPUT
+          echo "Changed apps: $apps"
+
+  build:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.apps != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.detect-changes.outputs.apps) }}
+        arch:
+          - name: amd64
+            runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+          - name: arm64
+            runner: ubuntu-24.04-arm
+            rust_target: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.arch.runner }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.arch.rust_target }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+
+      - name: Install ziglang
+        run: pip install ziglang
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb cargo-zigbuild --locked
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y fakeroot cmake protobuf-compiler
+
+      - name: Build package
+        run: go run . --app ${{ matrix.app }} --arch ${{ matrix.arch.name }}
