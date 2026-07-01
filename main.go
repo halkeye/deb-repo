@@ -40,6 +40,13 @@ type cargoType struct {
 	Version string `yaml:"version"`
 }
 
+type alternativeType struct {
+	Name     string `yaml:"name"`
+	Link     string `yaml:"link"`
+	Path     string `yaml:"path"`
+	Priority int    `yaml:"priority"`
+}
+
 type appType struct {
 	Name          string            `yaml:"name"`
 	Url           string            `yaml:"url"`
@@ -57,6 +64,7 @@ type appType struct {
 		Dst  string `yaml:"dst"`
 		Mode int    `yaml:"mode"`
 	} `yaml:"extra_files"`
+	Alternatives []alternativeType `yaml:"alternatives"`
 }
 
 func (pkg pkgType) BuildURL(arch archType) string {
@@ -380,6 +388,10 @@ func downloadApp(app appType, arch archType) error {
 		return fmt.Errorf("writing control file: %w", err)
 	}
 
+	if err := writeAlternativesScripts(debWorkDir, app.Alternatives); err != nil {
+		return fmt.Errorf("writing alternatives scripts: %w", err)
+	}
+
 	outDeb := fmt.Sprintf("%s_%s_%s.deb", app.Name, app.Version, arch.deb)
 	if err := buildDeb(debWorkDir, filepath.Join(debDir, outDeb)); err != nil {
 		return fmt.Errorf("building deb: %w", err)
@@ -532,6 +544,49 @@ Priority: optional
 Description: %s packaged from tgz
 `, name, version, arch, name)
 	return os.WriteFile(filepath.Join(debianDir, "control"), []byte(ctrl), 0o644)
+}
+
+func writeAlternativesScripts(dir string, alternatives []alternativeType) error {
+	if len(alternatives) == 0 {
+		return nil
+	}
+
+	debianDir := filepath.Join(dir, "DEBIAN")
+	if err := os.MkdirAll(debianDir, 0755); err != nil {
+		return fmt.Errorf("failed to create %s directory: %v", debianDir, err)
+	}
+
+	// Generate postinst script
+	var postinstLines []string
+	postinstLines = append(postinstLines, "#!/bin/sh", "set -e")
+	for _, alt := range alternatives {
+		postinstLines = append(postinstLines, fmt.Sprintf(
+			"update-alternatives --install %s %s %s %d",
+			alt.Link, alt.Name, alt.Path, alt.Priority,
+		))
+	}
+	postinstLines = append(postinstLines, "")
+	postinst := strings.Join(postinstLines, "\n")
+	if err := os.WriteFile(filepath.Join(debianDir, "postinst"), []byte(postinst), 0o755); err != nil {
+		return fmt.Errorf("failed to write postinst: %v", err)
+	}
+
+	// Generate prerm script
+	var prermLines []string
+	prermLines = append(prermLines, "#!/bin/sh", "set -e")
+	for _, alt := range alternatives {
+		prermLines = append(prermLines, fmt.Sprintf(
+			"update-alternatives --remove %s %s",
+			alt.Name, alt.Path,
+		))
+	}
+	prermLines = append(prermLines, "")
+	prerm := strings.Join(prermLines, "\n")
+	if err := os.WriteFile(filepath.Join(debianDir, "prerm"), []byte(prerm), 0o755); err != nil {
+		return fmt.Errorf("failed to write prerm: %v", err)
+	}
+
+	return nil
 }
 
 func buildDeb(dir, outDeb string) error {

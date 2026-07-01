@@ -1,0 +1,15 @@
+name: subtitleedit
+version: "5.0.0" # repo: SubtitleEdit/subtitleedit
+type: release_asset
+url_overrides:
+  arm64: https://github.com/SubtitleEdit/subtitleedit/releases/download/v{{ version }}/SubtitleEdit-Linux-ARM64.tar.gz
+  amd64: https://github.com/SubtitleEdit/subtitleedit/releases/download/v{{ version }}/SubtitleEdit-Linux-x64.tar.gz
+move_rules:
+  - src_regex: .*
+    dst: /usr/local/subtitleedit/
+    mode: 0755
+alternatives:
+  - name: subtitleedit
+    link: /usr/local/bin/subtitleedit
+    path: /usr/local/subtitleedit/SubtitleEdit
+    priority: 100
