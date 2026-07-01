@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -189,7 +189,25 @@ func main() {
 
 	var singleApp = flag.String("app", "", "only process single app")
 	var singleArch = flag.String("arch", "", "only build a single arch (e.g. amd64 or arm64)")
+	var logLevel = flag.String("log-level", "info", "log level (debug, info, warn, error)")
 	flag.Parse()
+
+	// Configure slog based on log level
+	var level slog.Level
+	switch strings.ToLower(*logLevel) {
+	case "debug":
+		level = slog.LevelDebug
+	case "info":
+		level = slog.LevelInfo
+	case "warn", "warning":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		fmt.Fprintf(os.Stderr, "unknown log level %q, using info\n", *logLevel)
+		level = slog.LevelInfo
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})))
 
 	if singleArch != nil && *singleArch != "" {
 		var filtered []archType
@@ -199,14 +217,16 @@ func main() {
 			}
 		}
 		if len(filtered) == 0 {
-			log.Fatalf("unknown arch %q", *singleArch)
+			slog.Error("unknown arch", "arch", *singleArch)
+			os.Exit(1)
 		}
 		archs = filtered
 	}
 
 	pkgs, apps, cargos, err := loadYaml()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to load yaml", "error", err)
+		os.Exit(1)
 	}
 	if singleApp != nil && *singleApp != "" {
 		for _, pkg := range pkgs {
@@ -240,17 +260,20 @@ func main() {
 
 	err = downloadDebs(pkgs)
 	if err != nil {
-		log.Fatal(fmt.Errorf("downloadDebs: %w", err))
+		slog.Error("downloadDebs failed", "error", err)
+		os.Exit(1)
 	}
 
 	err = downloadApps(apps)
 	if err != nil {
-		log.Fatal(fmt.Errorf("downloadApps: %w", err))
+		slog.Error("downloadApps failed", "error", err)
+		os.Exit(1)
 	}
 
 	err = downloadCargoDebs(cargos)
 	if err != nil {
-		log.Fatal(fmt.Errorf("downloadCargoDebs: %w", err))
+		slog.Error("downloadCargoDebs failed", "error", err)
+		os.Exit(1)
 	}
 }
 
@@ -314,7 +337,7 @@ func downloadDebs(pkgs []pkgType) error {
 	for _, arch := range archs {
 		for _, pkg := range pkgs {
 			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.Name, arch.deb, pkg.Version)
-			log.Println("Downloading " + filename)
+			slog.Info("Downloading", "filename", filename)
 			err := downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.BuildURL(arch))
 			if err != nil {
 				return fmt.Errorf("downloading deb %s: %w", filename, err)
@@ -351,7 +374,7 @@ func downloadApp(app appType, arch archType) error {
 	// 	}
 	// }
 
-	log.Println("Downloading App: " + filepath.Join(appDir, filename))
+	slog.Info("Downloading App", "path", filepath.Join(appDir, filename))
 
 	if unarchiveFunc == nil {
 		err = downloadURL(workDir, filename, appUrl)
@@ -525,7 +548,7 @@ func unarchive(file string, reader readerFunc, dst string) error {
 				return err
 			}
 		default:
-			log.Printf("skip %s (type %c)", h.Name, h.Typeflag)
+			slog.Debug("skipping tar entry", "name", h.Name, "type", string(h.Typeflag))
 		}
 	}
 	return nil
@@ -601,7 +624,7 @@ func buildDeb(dir, outDeb string) error {
 
 // runCommand runs name+args in dir (cwd when empty), streaming output.
 func runCommand(dir, name string, args ...string) error {
-	log.Printf("%s $ %s %s", dir, name, strings.Join(args, " "))
+	slog.Debug("running command", "dir", dir, "cmd", name, "args", strings.Join(args, " "))
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
@@ -689,7 +712,7 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 		debMap["priority"] = "optional"
 	}
 
-	log.Printf("Needs Changing: %t\n", needsChanging)
+	slog.Debug("Cargo.toml needs changing", "needsChanging", needsChanging)
 
 	if needsChanging {
 		tomlFile, err = os.Create(filepath.Join(srcDir, "Cargo.toml"))
@@ -712,16 +735,16 @@ func buildCargoDeb(cargo cargoType, arch archType) error {
 
 	// Skip if already built (e.g. restored from the CI package cache).
 	if _, err := os.Stat(outDeb); err == nil {
-		log.Printf("cargo-deb %s for %s already built, skipping", cargo.Name, arch.deb)
+		slog.Info("cargo-deb already built, skipping", "name", cargo.Name, "arch", arch.deb)
 		return nil
 	}
 
-	log.Printf("Building with zigbuild %s for %s (%s)", cargo.Name, arch.deb, arch.rust)
+	slog.Info("Building with zigbuild", "name", cargo.Name, "arch", arch.deb, "target", arch.rust)
 	if err := runCommand(srcDir, "fakeroot", "cargo", "zigbuild", "--release", "--target", arch.rust); err != nil {
 		return fmt.Errorf("cargo zigbuild: %w", err)
 	}
 
-	log.Printf("Building cargo-deb %s for %s (%s)", cargo.Name, arch.deb, arch.rust)
+	slog.Info("Building cargo-deb", "name", cargo.Name, "arch", arch.deb, "target", arch.rust)
 	if err := runCommand(srcDir, "fakeroot", "cargo", "deb", "--no-strip", "--no-build", "--target", arch.rust, "--output", outDeb); err != nil {
 		return fmt.Errorf("cargo deb: %w", err)
 	}
@@ -758,7 +781,7 @@ func warnTime(process string, warnTime time.Duration) func() {
 	start := time.Now()
 	return func() {
 		if time.Since(start) > warnTime {
-			log.Printf("Time taken by %s is %v\n", process, time.Since(start))
+			slog.Warn("slow operation", "process", process, "duration", time.Since(start))
 		}
 	}
 }
