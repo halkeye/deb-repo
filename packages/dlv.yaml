@@ -1,5 +1,5 @@
 name: dlv
-version: "1.26.3" # repo: go-delve/delve
+version: "1.27.0" # repo: go-delve/delve
 type: release_asset
 description: Delve is a debugger for the Go programming language.
 url_overrides:
