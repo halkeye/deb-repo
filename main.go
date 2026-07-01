@@ -383,6 +383,9 @@ func downloadApp(app appType, arch archType) error {
 	}
 
 	debDir := filepath.Join("tmp", arch.deb)
+	if err := os.MkdirAll(debDir, 0o755); err != nil {
+		return fmt.Errorf("creating %s: %w", debDir, err)
+	}
 
 	if err := writeControl(debWorkDir, app.Name, app.Version, arch.deb); err != nil {
 		return fmt.Errorf("writing control file: %w", err)
