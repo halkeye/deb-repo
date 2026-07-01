@@ -441,7 +441,7 @@ func processApp(app appType, workDir string, debWorkDir string) error {
 			filenameWithoutWork := path[len(workDir)+1:]
 			// fmt.Printf("Processing file %s with regex %s == %t\n", filenameWithoutWork, rule.SrcRegex.String(), rule.SrcRegex.MatchString(filenameWithoutWork))
 			if !rule.SrcRegex.MatchString(filenameWithoutWork) {
-				return nil
+				continue
 			}
 
 			newFile := filepath.Join(debWorkDir, rule.Dst)
