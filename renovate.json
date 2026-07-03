@@ -33,7 +33,7 @@
       "matchPackageNames": [
         "go-delve/delve"
       ],
-      "allowedVersions": "!/^1.27.0$/"
+      "allowedVersions": "!/^v?1.27.0$/"
     }
   ]
 }
