@@ -1,6 +1,6 @@
 name: ko
 url: https://github.com/ko-build/ko/releases/download/v{{ version }}/ko_{{ version }}_Linux_{{ kubectx_architecture }}.tar.gz
-version: "0.18.1" # repo: ko-build/ko
+version: "0.19.0" # repo: ko-build/ko
 type: release_asset
 move_rules:
   - src_regex: ko.*
