@@ -27,5 +27,13 @@
       "depNameTemplate": "kubernetes-sigs/kustomize",
       "datasourceTemplate": "github-releases"
     }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "go-delve/delve"
+      ],
+      "allowedVersions": "!/^1.27.0$/"
+    }
   ]
 }
