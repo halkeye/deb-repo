@@ -1,6 +1,4 @@
-url_overrides:
-  arm64: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-amd64.deb"
-  amd64: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-aarch64.deb"
+url: "https://github.com/fastfetch-cli/fastfetch/releases/download/{{ version }}/fastfetch-linux-{{ deb_architecture }}.deb"
 name:    "fastfetch"
 version: "2.65.2" # repo: fastfetch-cli/fastfetch
 type: deb
