@@ -24,10 +24,11 @@ import (
 // var errUnknownExtension = errors.New("unknown extension")
 
 type pkgType struct {
-	Url          string            `yaml:"url"`
-	Name         string            `yaml:"name"`
-	Version      string            `yaml:"version"`
-	UrlOverrides map[string]string `yaml:"url_overrides"`
+	Url           string            `yaml:"url"`
+	Name          string            `yaml:"name"`
+	Version       string            `yaml:"version"`
+	UrlOverrides  map[string]string `yaml:"url_overrides"`
+	Architectures []string          `yaml:"architectures"`
 }
 
 // cargoType is a Rust crate packaged into a .deb with cargo-deb
@@ -37,7 +38,8 @@ type cargoType struct {
 	Name string `yaml:"name"`
 	Url  string `yaml:"url"`
 	// Version is a git ref (tag, sha, or branch) to check out before building.
-	Version string `yaml:"version"`
+	Version       string   `yaml:"version"`
+	Architectures []string `yaml:"architectures"`
 }
 
 type alternativeType struct {
@@ -54,6 +56,7 @@ type appType struct {
 	Type          string            `yaml:"type"`
 	UrlOverrides  map[string]string `yaml:"url_overrides"`
 	ArchOverrides map[string]string `yaml:"arch_verrides"`
+	Architectures []string          `yaml:"architectures"`
 	MoveRules     []struct {
 		SrcRegex regexp.Regexp `yaml:"src_regex"`
 		Dst      string        `yaml:"dst"`
@@ -146,6 +149,26 @@ var (
 var (
 	templateRe = regexp.MustCompile(`{{\s*(?P<var>\w+)\s*}}`)
 )
+
+// filterArchs returns the subset of archs that match the given list of
+// architecture names (e.g., ["amd64", "arm64"]). If allowedArchs is nil or
+// empty, all archs are returned.
+func filterArchs(allowedArchs []string) []archType {
+	if len(allowedArchs) == 0 {
+		return archs
+	}
+	allowed := make(map[string]bool)
+	for _, a := range allowedArchs {
+		allowed[a] = true
+	}
+	var result []archType
+	for _, arch := range archs {
+		if allowed[arch.deb] {
+			result = append(result, arch)
+		}
+	}
+	return result
+}
 
 func downloadURL(dir string, filename string, url string) error {
 	// Create tmp directory if it doesn't exist
@@ -306,18 +329,20 @@ func loadYaml() ([]pkgType, []appType, []cargoType, error) {
 			switch app.Type {
 			case "deb":
 				pkgs = append(pkgs, pkgType{
-					Url:          app.Url,
-					Name:         app.Name,
-					Version:      app.Version,
-					UrlOverrides: app.UrlOverrides,
+					Url:           app.Url,
+					Name:          app.Name,
+					Version:       app.Version,
+					UrlOverrides:  app.UrlOverrides,
+					Architectures: app.Architectures,
 				})
 			case "release_asset":
 				apps = append(apps, app)
 			case "cargo-deb":
 				cargos = append(cargos, cargoType{
-					Name:    app.Name,
-					Url:     app.Url,
-					Version: app.Version,
+					Name:          app.Name,
+					Url:           app.Url,
+					Version:       app.Version,
+					Architectures: app.Architectures,
 				})
 			default:
 				return fmt.Errorf("unknown type %q (want \"deb\", \"release_asset\" or \"cargo-deb\")", app.Type)
@@ -334,8 +359,8 @@ func loadYaml() ([]pkgType, []appType, []cargoType, error) {
 }
 
 func downloadDebs(pkgs []pkgType) error {
-	for _, arch := range archs {
-		for _, pkg := range pkgs {
+	for _, pkg := range pkgs {
+		for _, arch := range filterArchs(pkg.Architectures) {
 			filename := fmt.Sprintf("%s-%s-%s.deb", pkg.Name, arch.deb, pkg.Version)
 			slog.Info("Downloading", "filename", filename)
 			err := downloadURL(filepath.Join("tmp", arch.deb), filename, pkg.BuildURL(arch))
@@ -427,8 +452,8 @@ func downloadApp(app appType, arch archType) error {
 }
 
 func downloadApps(apps []appType) error {
-	for _, arch := range archs {
-		for _, app := range apps {
+	for _, app := range apps {
+		for _, arch := range filterArchs(app.Architectures) {
 			err := downloadApp(app, arch)
 			if err != nil {
 				return fmt.Errorf("downloading apps %s: %w", app.Name, err)
@@ -632,8 +657,8 @@ func runCommand(dir, name string, args ...string) error {
 }
 
 func downloadCargoDebs(cargos []cargoType) error {
-	for _, arch := range archs {
-		for _, cargo := range cargos {
+	for _, cargo := range cargos {
+		for _, arch := range filterArchs(cargo.Architectures) {
 			if err := buildCargoDeb(cargo, arch); err != nil {
 				return fmt.Errorf("building cargo-deb %s for %s: %w", cargo.Name, arch.deb, err)
 			}
