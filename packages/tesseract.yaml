@@ -1,0 +1,6 @@
+url: "https://github.com/surakin/tesseract/releases/download/v{{ version }}/Tesseract-{{ version }}-Linux.deb"
+name: "tesseract"
+version: "0.8.13" # repo: surakin/tesseract
+type: deb
+architectures:
+  - amd64
