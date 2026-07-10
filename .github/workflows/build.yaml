@@ -21,9 +21,6 @@ jobs:
           - arch: amd64
             runner: ubuntu-latest
             rust_target: x86_64-unknown-linux-gnu
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-            rust_target: aarch64-unknown-linux-gnu
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout code
@@ -91,6 +88,7 @@ jobs:
         with:
           pattern: debs-*
           path: tmp
+          merge-multiple: true
 
       - name: Install reprepro
         run: |
@@ -100,7 +98,7 @@ jobs:
       - name: Build repo
         run: |
           for i in $(grep Codename repo/conf/distributions | awk '{print $2}'); do
-            reprepro -b repo includedeb $i tmp/*/*.deb
+            reprepro -b repo includedeb $i tmp/*.deb
           done
 
       - name: "Delete extra files"
