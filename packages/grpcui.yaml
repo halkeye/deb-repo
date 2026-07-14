@@ -1,5 +1,5 @@
 name: grpcui
-version: "1.4.3" # repo: fullstorydev/grpcui
+version: "1.5.2" # repo: fullstorydev/grpcui
 type: release_asset
 url: https://github.com/fullstorydev/grpcui/releases/download/v{{ version }}/grpcui_{{ version }}_linux_{{ kubectx_architecture }}.tar.gz
 move_rules:
