@@ -1,5 +1,5 @@
 name: opencode
-version: "1.18.2" # repo: anomalyco/opencode
+version: "1.18.3" # repo: anomalyco/opencode
 type: release_asset
 url_overrides:
   arm64: https://github.com/anomalyco/opencode/releases/download/v{{ version }}/opencode-linux-arm64.tar.gz
