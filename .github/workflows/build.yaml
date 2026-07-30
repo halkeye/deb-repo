@@ -37,7 +37,7 @@ jobs:
           target: ${{ matrix.rust_target }}
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
 
       - name: Install ziglang
         run: pip install ziglang
