@@ -1,5 +1,5 @@
 name: subtitleedit
-version: "5.0.0" # repo: SubtitleEdit/subtitleedit
+version: "5.1.0" # repo: SubtitleEdit/subtitleedit
 type: release_asset
 url_overrides:
   arm64: https://github.com/SubtitleEdit/subtitleedit/releases/download/v{{ version }}/SubtitleEdit-Linux-ARM64.tar.gz
