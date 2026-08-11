@@ -1,4 +1,6 @@
-url: "https://github.com/gomuks/gomuks/releases/download/v{{ version }}/gomuks-desktop_{{ version }}_{{ deb_architecture }}.deb"
 name: "gomuks-desktop"
-version: "26.07.0" # repo: gomuks/gomuks
+version: "0.2607.0" # repo: gomuks/gomuks
 type: deb
+url_overrides:
+  amd64: https://github.com/gomuks/gomuks/releases/download/v{{ version }}/gomuks-desktop_26.07.0_amd64.deb
+  arm64: https://github.com/gomuks/gomuks/releases/download/v{{ version }}/gomuks-desktop_26.07.0_arm64.deb
