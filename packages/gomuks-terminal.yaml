@@ -1,0 +1,8 @@
+name: gomuks-terminal
+url: https://github.com/gomuks/gomuks/releases/download/v{{ version }}/gomuks-terminal-{{ deb_architecture }}
+version: "0.2607.0" # repo: gomuks/gomuks
+type: release_asset
+move_rules:
+  - src_regex: gomuks-terminal-.*
+    dst: /usr/local/bin/gomuks-terminal
+    mode: 0755

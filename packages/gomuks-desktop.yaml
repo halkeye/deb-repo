@@ -1,0 +1,4 @@
+url: "https://github.com/gomuks/gomuks/releases/download/v{{ version }}/gomuks-desktop_{{ version }}_{{ deb_architecture }}.deb"
+name: "gomuks-desktop"
+version: "26.07.0" # repo: gomuks/gomuks
+type: deb
