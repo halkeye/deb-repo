@@ -1,5 +1,5 @@
 name: doggo-bin
-version: "1.2.0" # repo: mr-karan/doggo
+version: "1.3.0" # repo: mr-karan/doggo
 type: release_asset
 description: Command-line DNS Client for Humans.
 url_overrides:
