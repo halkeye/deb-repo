@@ -1,5 +1,5 @@
 name:    "fzf"
-version: "0.74.2" # repo: junegunn/fzf
+version: "0.74.3" # repo: junegunn/fzf
 type: release_asset
 url:     "https://github.com/junegunn/fzf/releases/download/v{{ version }}/fzf-{{ version }}-linux_{{ deb_architecture }}.tar.gz"
 move_rules:
