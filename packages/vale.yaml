@@ -1,5 +1,5 @@
 name: vale
-version: "3.17.1" # repo: errata-ai/vale
+version: "3.18.0" # repo: errata-ai/vale
 type: release_asset
 url_overrides:
   arm64: https://github.com/errata-ai/vale/releases/download/v{{ version }}/vale_{{ version }}_Linux_arm64.tar.gz
