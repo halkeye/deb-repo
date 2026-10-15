@@ -1,6 +1,6 @@
 name: fx
 url: https://github.com/antonmedv/fx/releases/download/{{ version }}/fx_linux_{{ deb_architecture }}
-version: "39.2.0" # repo: antonmedv/fx
+version: "40.0.0" # repo: antonmedv/fx
 type: release_asset
 move_rules:
   - src_regex: fx_.*
