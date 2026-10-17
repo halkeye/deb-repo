@@ -1,5 +1,5 @@
 name: direnv
-version: "2.38.1" # repo: direnv/direnv
+version: "2.38.2" # repo: direnv/direnv
 type: release_asset
 url: https://github.com/direnv/direnv/releases/download/v{{ version }}/direnv.linux-{{ deb_architecture }}
 move_rules:
