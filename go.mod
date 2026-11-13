@@ -4,7 +4,7 @@ go 1.24.4
 
 require (
 	github.com/pelletier/go-toml/v2 v2.4.3
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/ulikunitz/xz v0.5.17
 	gopkg.in/yaml.v3 v3.0.1
 )
